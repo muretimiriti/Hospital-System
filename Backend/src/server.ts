@@ -6,7 +6,8 @@ import connectDB from './config/db';
 // Import routes
 import healthProgramRoutes from './routes/healthProgramRoutes';
 import clientRoutes from './routes/clientRoutes';
-// TODO: Import other routes (enrollment, auth)
+import enrollmentRoutes from './routes/enrollmentRoutes';
+// TODO: Import auth routes
 
 dotenv.config();
 
@@ -26,8 +27,9 @@ app.get('/', (req: Request, res: Response) => {
 
 // Mount Routes
 app.use('/api/health-programs', healthProgramRoutes);
-app.use('/api/clients', clientRoutes);
-// TODO: Add other routes (enrollments, auth)
+app.use('/api/clients', clientRoutes); // Handles /api/clients and /api/clients/:clientId/enrollments
+app.use('/api/enrollments', enrollmentRoutes); // Handles direct enrollment routes like /api/enrollments/:id
+// TODO: Add auth routes
 
 const PORT = process.env.PORT || 5000;
 

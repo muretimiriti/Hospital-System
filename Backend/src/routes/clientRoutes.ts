@@ -7,6 +7,7 @@ import {
   deleteClient,
   searchClients,
 } from '../controllers/clientController';
+import enrollmentRoutes from './enrollmentRoutes'; // Import enrollment routes
 // import { protect } from '../middleware/authMiddleware'; // TODO: Uncomment when auth is ready
 
 const router = express.Router();
@@ -40,9 +41,8 @@ router.put('/:id', updateClient);
 // TODO: Add protect middleware
 router.delete('/:id', deleteClient);
 
-// --- Enrollment Routes (Nested under Client) ---
-// GET /api/clients/:clientId/enrollments - Handled in enrollmentController/Routes
-// POST /api/clients/:clientId/programs/:programId - Handled in enrollmentController/Routes
-// DELETE /api/clients/:clientId/programs/:programId - Handled in enrollmentController/Routes
+// --- Re-route to Enrollment Router for nested routes ---
+// Use enrollmentRoutes for paths like /api/clients/:clientId/enrollments
+router.use('/:clientId/enrollments', enrollmentRoutes);
 
 export default router; 
