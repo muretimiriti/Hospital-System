@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import HealthProgram, { IHealthProgram } from '../models/HealthProgram';
 import { handleMongooseError } from '../utils/errorHandler';
+import { getPaginationParams, getPaginationResponse } from '../utils/pagination';
 
 // Controller function to create a new health program
 export const createProgram = async (req: Request, res: Response) => {
@@ -22,13 +23,31 @@ export const createProgram = async (req: Request, res: Response) => {
 };
 
 // Controller function to get all health programs
-export const getAllPrograms = async (req: Request, res: Response) => {
+export const getPrograms = async (req: Request, res: Response) => {
   try {
-    const programs = await HealthProgram.find().sort({ createdAt: -1 }); // Sort by newest first
-    res.status(200).json(programs);
-  } catch (error: any) {
-    console.error('Error fetching programs:', error);
-    res.status(500).json({ message: 'Server error fetching programs' });
+    const { page, limit, sortBy, sortOrder } = getPaginationParams(req);
+    const skip = (page - 1) * limit;
+
+    // Build sort object
+    const sort: { [key: string]: 1 | -1 } = {};
+    sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
+
+    // Get total count
+    const total = await HealthProgram.countDocuments();
+
+    // Get paginated and sorted programs
+    const programs = await HealthProgram.find()
+      .sort(sort)
+      .skip(skip)
+      .limit(limit);
+
+    res.json(getPaginationResponse(programs, total, page, limit));
+  } catch (error) {
+    console.error('Error fetching health programs:', error);
+    res.status(500).json({
+      message: 'Failed to fetch health programs',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
   }
 };
 

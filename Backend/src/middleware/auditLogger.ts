@@ -1,13 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { createAuditLog } from '../services/auditLogService';
 
-interface RequestWithUser extends Request {
-  user?: {
-    id: string;
-    email: string;
-  };
-}
-
 export const auditLogger = (entityType: 'client' | 'program' | 'enrollment') => {
   return async (req: Request, res: Response, next: NextFunction) => {
     // Store the original res.json method

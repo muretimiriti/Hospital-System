@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaHospital, FaUserMd, FaUsers, FaChartBar, FaHistory } from 'react-icons/fa';
 import { HealthPrograms } from './components/health-programs/HealthPrograms';
-import { Clients } from './components/clients/Clients';
+import Clients from './components/clients/Clients';
 import { ClientProfile } from './components/clients/ClientProfile';
 import Dashboard from './components/Dashboard';
 import AuditLogs from './components/AuditLogs';
+import Navigation from './components/common/Navigation';
 import { NotificationProvider } from './contexts/NotificationContext';
 import { theme } from './styles/theme';
 
@@ -25,101 +25,11 @@ function App() {
 
   return (
     <NotificationProvider>
-      <div className="min-h-screen" style={{ backgroundColor: theme.colors.background.default }}>
-        {/* Navigation */}
-        <nav className="bg-white shadow-md">
-          <div className="container mx-auto px-4 py-4">
-            <div className="flex justify-between items-center">
-              <div className="flex items-center">
-                <FaHospital className="text-3xl mr-3" style={{ color: theme.colors.primary.main }} />
-                <h1 className="text-2xl font-bold" style={{ color: theme.colors.text.primary }}>
-                  Health Information System
-                </h1>
-              </div>
-              <div className="flex space-x-4">
-                <motion.button
-                  onClick={() => {
-                    setActiveTab('dashboard');
-                    setSelectedClientId(null);
-                  }}
-                  className={`px-4 py-2 rounded flex items-center ${
-                    activeTab === 'dashboard'
-                      ? 'text-white'
-                      : 'text-gray-700 hover:bg-gray-100'
-                  }`}
-                  style={{
-                    backgroundColor: activeTab === 'dashboard' ? theme.colors.primary.main : 'transparent',
-                  }}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <FaChartBar className="mr-2" />
-                  Dashboard
-                </motion.button>
-                <motion.button
-                  onClick={() => {
-                    setActiveTab('programs');
-                    setSelectedClientId(null);
-                  }}
-                  className={`px-4 py-2 rounded flex items-center ${
-                    activeTab === 'programs'
-                      ? 'text-white'
-                      : 'text-gray-700 hover:bg-gray-100'
-                  }`}
-                  style={{
-                    backgroundColor: activeTab === 'programs' ? theme.colors.primary.main : 'transparent',
-                  }}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <FaUserMd className="mr-2" />
-                  Health Programs
-                </motion.button>
-                <motion.button
-                  onClick={() => {
-                    setActiveTab('clients');
-                    setSelectedClientId(null);
-                  }}
-                  className={`px-4 py-2 rounded flex items-center ${
-                    activeTab === 'clients'
-                      ? 'text-white'
-                      : 'text-gray-700 hover:bg-gray-100'
-                  }`}
-                  style={{
-                    backgroundColor: activeTab === 'clients' ? theme.colors.primary.main : 'transparent',
-                  }}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <FaUsers className="mr-2" />
-                  Clients
-                </motion.button>
-                <motion.button
-                  onClick={() => {
-                    setActiveTab('audit');
-                    setSelectedClientId(null);
-                  }}
-                  className={`px-4 py-2 rounded flex items-center ${
-                    activeTab === 'audit'
-                      ? 'text-white'
-                      : 'text-gray-700 hover:bg-gray-100'
-                  }`}
-                  style={{
-                    backgroundColor: activeTab === 'audit' ? theme.colors.primary.main : 'transparent',
-                  }}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <FaHistory className="mr-2" />
-                  Audit Logs
-                </motion.button>
-              </div>
-            </div>
-          </div>
-        </nav>
+      <div className="min-h-screen flex flex-col" style={{ backgroundColor: theme.colors.background.default }}>
+        <Navigation activeTab={activeTab} onTabChange={setActiveTab} />
 
         {/* Main Content */}
-        <main className="container mx-auto px-4 py-8">
+        <main className="flex-1 container mx-auto px-4 py-4 md:py-8">
           <AnimatePresence mode="wait">
             {activeTab === 'dashboard' ? (
               <motion.div
@@ -155,15 +65,15 @@ function App() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
               >
-                <div className="flex justify-between items-center mb-8">
+                <div className="flex justify-between items-center mb-4 md:mb-8">
                   <motion.button
                     onClick={handleBackToList}
                     className="text-blue-500 hover:text-blue-600 flex items-center"
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                   >
-                    <FaUsers className="mr-2" />
-                    Back to Client List
+                    <span className="md:hidden">Back</span>
+                    <span className="hidden md:inline">Back to Client List</span>
                   </motion.button>
                 </div>
                 <ClientProfile clientId={selectedClientId} />

@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import Client, { IClient } from '../models/Client';
 import Enrollment from '../models/Enrollment'; // Needed for cleanup on delete
 import { handleMongooseError } from '../utils/errorHandler';
+import { getPaginationParams, getPaginationResponse } from '../utils/pagination';
 
 // Controller function to create a new client
 export const createClient = async (req: Request, res: Response) => {
@@ -23,15 +24,32 @@ export const createClient = async (req: Request, res: Response) => {
 };
 
 // Controller function to get all clients
-export const getAllClients = async (req: Request, res: Response) => {
+export const getClients = async (req: Request, res: Response) => {
   try {
+    const { page, limit, sortBy, sortOrder } = getPaginationParams(req);
+    const skip = (page - 1) * limit;
+
+    // Build sort object
+    const sort: { [key: string]: 1 | -1 } = {};
+    sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
+
+    // Get total count
+    const total = await Client.countDocuments();
+
+    // Get paginated and sorted clients
     const clients = await Client.find()
-      .select('-enrolledPrograms') // Exclude detailed enrollment refs by default
-      .sort({ lastName: 1, firstName: 1 }); // Sort alphabetically
-    res.status(200).json(clients);
-  } catch (error: any) {
+      .sort(sort)
+      .skip(skip)
+      .limit(limit)
+      .populate('enrolledPrograms');
+
+    res.json(getPaginationResponse(clients, total, page, limit));
+  } catch (error) {
     console.error('Error fetching clients:', error);
-    res.status(500).json({ message: 'Server error fetching clients' });
+    res.status(500).json({
+      message: 'Failed to fetch clients',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
   }
 };
 
