@@ -1,9 +1,21 @@
 import { useState } from 'react';
 import { HealthPrograms } from './components/health-programs/HealthPrograms';
 import { Clients } from './components/clients/Clients';
+import { ClientProfile } from './components/clients/ClientProfile';
 
 function App() {
   const [activeTab, setActiveTab] = useState<'programs' | 'clients'>('programs');
+  const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
+
+  // Handle client selection
+  const handleClientSelect = (clientId: string) => {
+    setSelectedClientId(clientId);
+  };
+
+  // Handle back to client list
+  const handleBackToList = () => {
+    setSelectedClientId(null);
+  };
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -13,7 +25,10 @@ function App() {
             <h1 className="text-2xl font-bold text-gray-800">Health Information System</h1>
             <div className="flex space-x-4">
               <button
-                onClick={() => setActiveTab('programs')}
+                onClick={() => {
+                  setActiveTab('programs');
+                  setSelectedClientId(null);
+                }}
                 className={`px-4 py-2 rounded ${
                   activeTab === 'programs'
                     ? 'bg-blue-500 text-white'
@@ -23,7 +38,10 @@ function App() {
                 Health Programs
               </button>
               <button
-                onClick={() => setActiveTab('clients')}
+                onClick={() => {
+                  setActiveTab('clients');
+                  setSelectedClientId(null);
+                }}
                 className={`px-4 py-2 rounded ${
                   activeTab === 'clients'
                     ? 'bg-blue-500 text-white'
@@ -37,7 +55,23 @@ function App() {
         </div>
       </nav>
       <main>
-        {activeTab === 'programs' ? <HealthPrograms /> : <Clients />}
+        {activeTab === 'programs' ? (
+          <HealthPrograms />
+        ) : selectedClientId ? (
+          <div className="container mx-auto px-4 py-8">
+            <div className="flex justify-between items-center mb-8">
+              <button
+                onClick={handleBackToList}
+                className="text-blue-500 hover:text-blue-600"
+              >
+                ← Back to Client List
+              </button>
+            </div>
+            <ClientProfile clientId={selectedClientId} />
+          </div>
+        ) : (
+          <Clients onClientSelect={handleClientSelect} />
+        )}
       </main>
     </div>
   );

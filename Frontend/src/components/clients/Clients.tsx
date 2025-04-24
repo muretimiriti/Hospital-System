@@ -3,7 +3,11 @@ import React, { useState } from 'react';
 import { ClientList } from './ClientList';
 import { CreateClient } from './CreateClient';
 
-export const Clients: React.FC = () => {
+interface ClientsProps {
+  onClientSelect: (clientId: string) => void;
+}
+
+export const Clients: React.FC<ClientsProps> = ({ onClientSelect }) => {
   // Toggle between list and create form views
   const [showCreateForm, setShowCreateForm] = useState(false);
 
@@ -28,7 +32,7 @@ export const Clients: React.FC = () => {
       {showCreateForm ? (
         <CreateClient onClientCreated={handleClientCreated} />
       ) : (
-        <ClientList />
+        <ClientList onClientSelect={onClientSelect} />
       )}
     </div>
   );
