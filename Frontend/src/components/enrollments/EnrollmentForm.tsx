@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { FaSearch, FaUserMd, FaNotesMedical, FaCheck } from 'react-icons/fa';
 import { CreateEnrollmentInput } from '../../types/enrollment';
 import { HealthProgram } from '../../types/healthProgram';
 import { enrollmentService } from '../../services/enrollmentService';
 import { healthProgramService } from '../../services/healthProgramService';
+import { theme } from '../../styles/theme';
 
 interface EnrollmentFormProps {
   clientId: string;
@@ -115,80 +118,130 @@ export const EnrollmentForm: React.FC<EnrollmentFormProps> = ({ clientId, onEnro
   };
 
   return (
-    <div className="bg-white shadow rounded-lg p-6">
-      <h2 className="text-2xl font-bold mb-6">Enroll in Program</h2>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      className="bg-white shadow-lg rounded-lg p-6"
+      style={{ backgroundColor: theme.colors.background.paper }}
+    >
+      <div className="flex items-center mb-6">
+        <FaUserMd className="text-2xl mr-3" style={{ color: theme.colors.primary.main }} />
+        <h2 className="text-2xl font-bold" style={{ color: theme.colors.text.primary }}>
+          Enroll in Program
+        </h2>
+      </div>
+
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Program Selection Section */}
         <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Search Programs
-            </label>
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <FaSearch className="text-gray-400" />
+            </div>
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search programs by name or description..."
-              className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              className="pl-10 w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              style={{ borderColor: theme.colors.primary.light }}
             />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Program List */}
-            <div className="border rounded-lg overflow-hidden">
-              <div className="bg-gray-50 p-3 border-b">
-                <h3 className="font-medium">Available Programs</h3>
+            <motion.div
+              className="border rounded-lg overflow-hidden"
+              style={{ borderColor: theme.colors.primary.light }}
+            >
+              <div className="p-3 border-b" style={{ backgroundColor: theme.colors.primary.light }}>
+                <h3 className="font-medium text-white">Available Programs</h3>
               </div>
               <div className="max-h-60 overflow-y-auto">
-                {filteredPrograms.map((program) => (
-                  <div
-                    key={program.id}
-                    onClick={() => handleProgramSelect(program)}
-                    className={`p-3 cursor-pointer hover:bg-gray-50 transition-colors ${
-                      formData.programId === program.id ? 'bg-blue-50 border-l-4 border-blue-500' : ''
-                    }`}
-                  >
-                    <h4 className="font-medium">{program.name}</h4>
-                    <p className="text-sm text-gray-600 line-clamp-2">{program.description}</p>
-                  </div>
-                ))}
+                <AnimatePresence>
+                  {filteredPrograms.map((program) => (
+                    <motion.div
+                      key={program.id}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 20 }}
+                      onClick={() => handleProgramSelect(program)}
+                      className={`p-3 cursor-pointer hover:bg-gray-50 transition-colors ${
+                        formData.programId === program.id ? 'bg-blue-50 border-l-4' : ''
+                      }`}
+                      style={{
+                        borderLeftColor: formData.programId === program.id ? theme.colors.primary.main : 'transparent',
+                      }}
+                    >
+                      <h4 className="font-medium" style={{ color: theme.colors.text.primary }}>
+                        {program.name}
+                      </h4>
+                      <p className="text-sm" style={{ color: theme.colors.text.secondary }}>
+                        {program.description}
+                      </p>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
                 {filteredPrograms.length === 0 && (
-                  <div className="p-3 text-gray-500 text-center">
+                  <div className="p-3 text-center" style={{ color: theme.colors.text.disabled }}>
                     No programs found matching your search
                   </div>
                 )}
               </div>
-            </div>
+            </motion.div>
 
             {/* Selected Program Details */}
-            <div className="border rounded-lg">
-              <div className="bg-gray-50 p-3 border-b">
-                <h3 className="font-medium">Selected Program</h3>
+            <motion.div
+              className="border rounded-lg"
+              style={{ borderColor: theme.colors.primary.light }}
+            >
+              <div className="p-3 border-b" style={{ backgroundColor: theme.colors.primary.light }}>
+                <h3 className="font-medium text-white">Selected Program</h3>
               </div>
               <div className="p-4">
-                {selectedProgram ? (
-                  <div>
-                    <h4 className="font-semibold text-lg mb-2">{selectedProgram.name}</h4>
-                    <p className="text-gray-600 mb-4">{selectedProgram.description}</p>
-                    <div className="text-sm text-gray-500">
-                      Created: {new Date(selectedProgram.createdAt).toLocaleDateString()}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-gray-500 text-center py-4">
-                    Select a program to view details
-                  </div>
-                )}
+                <AnimatePresence mode="wait">
+                  {selectedProgram ? (
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -20 }}
+                    >
+                      <h4 className="font-semibold text-lg mb-2" style={{ color: theme.colors.text.primary }}>
+                        {selectedProgram.name}
+                      </h4>
+                      <p className="mb-4" style={{ color: theme.colors.text.secondary }}>
+                        {selectedProgram.description}
+                      </p>
+                      <div className="text-sm" style={{ color: theme.colors.text.disabled }}>
+                        Created: {new Date(selectedProgram.createdAt).toLocaleDateString()}
+                      </div>
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="text-center py-4"
+                      style={{ color: theme.colors.text.disabled }}
+                    >
+                      Select a program to view details
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
-            </div>
+            </motion.div>
           </div>
         </div>
 
         {/* Notes Section */}
         <div>
-          <label htmlFor="notes" className="block text-sm font-medium text-gray-700">
-            Notes (Optional)
-          </label>
+          <div className="flex items-center mb-2">
+            <FaNotesMedical className="mr-2" style={{ color: theme.colors.primary.main }} />
+            <label htmlFor="notes" className="block text-sm font-medium" style={{ color: theme.colors.text.primary }}>
+              Notes (Optional)
+            </label>
+          </div>
           <textarea
             id="notes"
             name="notes"
@@ -197,49 +250,85 @@ export const EnrollmentForm: React.FC<EnrollmentFormProps> = ({ clientId, onEnro
             rows={3}
             maxLength={500}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            style={{ borderColor: theme.colors.primary.light }}
             placeholder="Add any additional notes about the enrollment"
           />
-          <p className="mt-1 text-sm text-gray-500">
+          <p className="mt-1 text-sm" style={{ color: theme.colors.text.secondary }}>
             {(formData.notes || '').length}/500 characters
           </p>
         </div>
 
         {/* Error Messages */}
-        {validationErrors.length > 0 && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-            <h4 className="text-red-800 font-medium mb-2">Please fix the following errors:</h4>
-            <ul className="list-disc list-inside text-red-600">
-              {validationErrors.map((error, index) => (
-                <li key={index}>{error}</li>
-              ))}
-            </ul>
-          </div>
-        )}
+        <AnimatePresence>
+          {validationErrors.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="bg-red-50 border border-red-200 rounded-lg p-4"
+              style={{ borderColor: theme.colors.error.light }}
+            >
+              <h4 className="text-red-800 font-medium mb-2">Please fix the following errors:</h4>
+              <ul className="list-disc list-inside text-red-600">
+                {validationErrors.map((error, index) => (
+                  <li key={index}>{error}</li>
+                ))}
+              </ul>
+            </motion.div>
+          )}
 
-        {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-600">
-            {error}
-          </div>
-        )}
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="bg-red-50 border border-red-200 rounded-lg p-4"
+              style={{ borderColor: theme.colors.error.light }}
+            >
+              <p className="text-red-600">{error}</p>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Form Actions */}
         <div className="flex justify-end space-x-4">
-          <button
+          <motion.button
             type="button"
             onClick={() => onEnrollmentCreated()}
-            className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+            className="px-4 py-2 border rounded-md"
+            style={{
+              borderColor: theme.colors.primary.light,
+              color: theme.colors.text.primary,
+            }}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
           >
             Cancel
-          </button>
-          <button
+          </motion.button>
+          <motion.button
             type="submit"
             disabled={loading}
-            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors disabled:bg-blue-300"
+            className="px-4 py-2 rounded text-white flex items-center"
+            style={{
+              backgroundColor: loading ? theme.colors.primary.light : theme.colors.primary.main,
+            }}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
           >
-            {loading ? 'Enrolling...' : 'Enroll in Program'}
-          </button>
+            {loading ? (
+              <>
+                <span className="animate-spin mr-2">⏳</span>
+                Enrolling...
+              </>
+            ) : (
+              <>
+                <FaCheck className="mr-2" />
+                Enroll in Program
+              </>
+            )}
+          </motion.button>
         </div>
       </form>
-    </div>
+    </motion.div>
   );
 }; 

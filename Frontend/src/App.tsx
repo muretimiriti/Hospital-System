@@ -1,7 +1,11 @@
 import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { FaHospital, FaUserMd, FaUsers } from 'react-icons/fa';
 import { HealthPrograms } from './components/health-programs/HealthPrograms';
 import { Clients } from './components/clients/Clients';
 import { ClientProfile } from './components/clients/ClientProfile';
+import { NotificationProvider } from './contexts/NotificationContext';
+import { theme } from './styles/theme';
 
 function App() {
   const [activeTab, setActiveTab] = useState<'programs' | 'clients'>('programs');
@@ -18,62 +22,117 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <nav className="bg-white shadow-sm">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-bold text-gray-800">Health Information System</h1>
-            <div className="flex space-x-4">
-              <button
-                onClick={() => {
-                  setActiveTab('programs');
-                  setSelectedClientId(null);
-                }}
-                className={`px-4 py-2 rounded ${
-                  activeTab === 'programs'
-                    ? 'bg-blue-500 text-white'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`}
-              >
-                Health Programs
-              </button>
-              <button
-                onClick={() => {
-                  setActiveTab('clients');
-                  setSelectedClientId(null);
-                }}
-                className={`px-4 py-2 rounded ${
-                  activeTab === 'clients'
-                    ? 'bg-blue-500 text-white'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`}
-              >
-                Clients
-              </button>
+    <NotificationProvider>
+      <div className="min-h-screen" style={{ backgroundColor: theme.colors.background.default }}>
+        {/* Navigation */}
+        <nav className="bg-white shadow-md">
+          <div className="container mx-auto px-4 py-4">
+            <div className="flex justify-between items-center">
+              <div className="flex items-center">
+                <FaHospital className="text-3xl mr-3" style={{ color: theme.colors.primary.main }} />
+                <h1 className="text-2xl font-bold" style={{ color: theme.colors.text.primary }}>
+                  Health Information System
+                </h1>
+              </div>
+              <div className="flex space-x-4">
+                <motion.button
+                  onClick={() => {
+                    setActiveTab('programs');
+                    setSelectedClientId(null);
+                  }}
+                  className={`px-4 py-2 rounded flex items-center ${
+                    activeTab === 'programs'
+                      ? 'text-white'
+                      : 'text-gray-700 hover:bg-gray-100'
+                  }`}
+                  style={{
+                    backgroundColor: activeTab === 'programs' ? theme.colors.primary.main : 'transparent',
+                  }}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <FaUserMd className="mr-2" />
+                  Health Programs
+                </motion.button>
+                <motion.button
+                  onClick={() => {
+                    setActiveTab('clients');
+                    setSelectedClientId(null);
+                  }}
+                  className={`px-4 py-2 rounded flex items-center ${
+                    activeTab === 'clients'
+                      ? 'text-white'
+                      : 'text-gray-700 hover:bg-gray-100'
+                  }`}
+                  style={{
+                    backgroundColor: activeTab === 'clients' ? theme.colors.primary.main : 'transparent',
+                  }}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <FaUsers className="mr-2" />
+                  Clients
+                </motion.button>
+              </div>
             </div>
           </div>
-        </div>
-      </nav>
-      <main>
-        {activeTab === 'programs' ? (
-          <HealthPrograms />
-        ) : selectedClientId ? (
-          <div className="container mx-auto px-4 py-8">
-            <div className="flex justify-between items-center mb-8">
-              <button
-                onClick={handleBackToList}
-                className="text-blue-500 hover:text-blue-600"
+        </nav>
+
+        {/* Main Content */}
+        <main className="container mx-auto px-4 py-8">
+          <AnimatePresence mode="wait">
+            {activeTab === 'programs' ? (
+              <motion.div
+                key="programs"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
               >
-                ← Back to Client List
-              </button>
-            </div>
-            <ClientProfile clientId={selectedClientId} />
+                <HealthPrograms />
+              </motion.div>
+            ) : selectedClientId ? (
+              <motion.div
+                key="client-profile"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+              >
+                <div className="flex justify-between items-center mb-8">
+                  <motion.button
+                    onClick={handleBackToList}
+                    className="text-blue-500 hover:text-blue-600 flex items-center"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <FaUsers className="mr-2" />
+                    Back to Client List
+                  </motion.button>
+                </div>
+                <ClientProfile clientId={selectedClientId} />
+              </motion.div>
+            ) : (
+              <motion.div
+                key="clients"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+              >
+                <Clients onClientSelect={handleClientSelect} />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </main>
+
+        {/* Footer */}
+        <footer className="bg-white shadow-inner mt-auto">
+          <div className="container mx-auto px-4 py-4">
+            <p className="text-center text-sm" style={{ color: theme.colors.text.secondary }}>
+              © {new Date().getFullYear()} Health Information System. All rights reserved.
+            </p>
           </div>
-        ) : (
-          <Clients onClientSelect={handleClientSelect} />
-        )}
-      </main>
-    </div>
+        </footer>
+      </div>
+    </NotificationProvider>
   );
 }
 
