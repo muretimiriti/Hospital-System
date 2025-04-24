@@ -2,27 +2,15 @@ import React, { useEffect, useState } from 'react';
 import { HealthProgram } from '../../types/healthProgram';
 import { healthProgramService } from '../../services/healthProgramService';
 
-/**
- * Component for displaying a list of health programs
- * Handles fetching, displaying, and deleting health programs
- */
 export const HealthProgramList: React.FC = () => {
-  // State for storing the list of health programs
   const [programs, setPrograms] = useState<HealthProgram[]>([]);
-  // State for tracking loading status
   const [loading, setLoading] = useState(true);
-  // State for storing any error messages
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch programs when component mounts
   useEffect(() => {
     fetchPrograms();
   }, []);
 
-  /**
-   * Fetches all health programs from the API
-   * Updates the programs state with the fetched data
-   */
   const fetchPrograms = async () => {
     try {
       setLoading(true);
@@ -37,11 +25,6 @@ export const HealthProgramList: React.FC = () => {
     }
   };
 
-  /**
-   * Handles the deletion of a health program
-   * Shows a confirmation dialog before deleting
-   * @param id - The ID of the program to delete
-   */
   const handleDelete = async (id: string) => {
     if (window.confirm('Are you sure you want to delete this program?')) {
       try {
@@ -54,17 +37,14 @@ export const HealthProgramList: React.FC = () => {
     }
   };
 
-  // Show loading state while fetching data
   if (loading) {
     return <div className="flex justify-center items-center h-64">Loading...</div>;
   }
 
-  // Show error message if there's an error
   if (error) {
     return <div className="text-red-500 text-center">{error}</div>;
   }
 
-  // Render the list of health programs
   return (
     <div className="container mx-auto px-4 py-8">
       <h2 className="text-2xl font-bold mb-6">Health Programs</h2>

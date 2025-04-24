@@ -2,33 +2,18 @@ import React, { useState } from 'react';
 import { CreateHealthProgramInput } from '../../types/healthProgram';
 import { healthProgramService } from '../../services/healthProgramService';
 
-/**
- * Props for the CreateHealthProgram component
- * @property onProgramCreated - Callback function to be called when a program is successfully created
- */
 interface CreateHealthProgramProps {
   onProgramCreated: () => void;
 }
 
-/**
- * Component for creating new health programs
- * Handles form state, validation, and submission
- */
 export const CreateHealthProgram: React.FC<CreateHealthProgramProps> = ({ onProgramCreated }) => {
-  // State for form data
   const [formData, setFormData] = useState<CreateHealthProgramInput>({
     name: '',
     description: '',
   });
-  // State for error messages
   const [error, setError] = useState<string | null>(null);
-  // State for loading status during submission
   const [loading, setLoading] = useState(false);
 
-  /**
-   * Handles changes to form input fields
-   * Updates the formData state with the new values
-   */
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -37,10 +22,6 @@ export const CreateHealthProgram: React.FC<CreateHealthProgramProps> = ({ onProg
     }));
   };
 
-  /**
-   * Handles form submission
-   * Creates a new health program and calls the onProgramCreated callback
-   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -58,7 +39,6 @@ export const CreateHealthProgram: React.FC<CreateHealthProgramProps> = ({ onProg
     }
   };
 
-  // Render the create program form
   return (
     <div className="bg-white shadow rounded-lg p-6">
       <h2 className="text-2xl font-bold mb-6">Create New Health Program</h2>
