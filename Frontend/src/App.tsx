@@ -1,15 +1,16 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaHospital, FaUserMd, FaUsers, FaChartBar } from 'react-icons/fa';
+import { FaHospital, FaUserMd, FaUsers, FaChartBar, FaHistory } from 'react-icons/fa';
 import { HealthPrograms } from './components/health-programs/HealthPrograms';
 import { Clients } from './components/clients/Clients';
 import { ClientProfile } from './components/clients/ClientProfile';
 import Dashboard from './components/Dashboard';
+import AuditLogs from './components/AuditLogs';
 import { NotificationProvider } from './contexts/NotificationContext';
 import { theme } from './styles/theme';
 
 function App() {
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'programs' | 'clients'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'programs' | 'clients' | 'audit'>('dashboard');
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
 
   // Handle client selection
@@ -93,6 +94,25 @@ function App() {
                   <FaUsers className="mr-2" />
                   Clients
                 </motion.button>
+                <motion.button
+                  onClick={() => {
+                    setActiveTab('audit');
+                    setSelectedClientId(null);
+                  }}
+                  className={`px-4 py-2 rounded flex items-center ${
+                    activeTab === 'audit'
+                      ? 'text-white'
+                      : 'text-gray-700 hover:bg-gray-100'
+                  }`}
+                  style={{
+                    backgroundColor: activeTab === 'audit' ? theme.colors.primary.main : 'transparent',
+                  }}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <FaHistory className="mr-2" />
+                  Audit Logs
+                </motion.button>
               </div>
             </div>
           </div>
@@ -118,6 +138,15 @@ function App() {
                 exit={{ opacity: 0, y: -20 }}
               >
                 <HealthPrograms />
+              </motion.div>
+            ) : activeTab === 'audit' ? (
+              <motion.div
+                key="audit"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+              >
+                <AuditLogs />
               </motion.div>
             ) : selectedClientId ? (
               <motion.div

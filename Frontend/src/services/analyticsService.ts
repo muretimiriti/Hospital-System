@@ -3,6 +3,8 @@ import { ApiResponse } from '../types/common';
 
 interface DashboardStats {
   totalClients: number;
+  totalPrograms: number;
+  totalEnrollments: number;
   enrollmentsPerProgram: Array<{
     programId: string;
     programName: string;
@@ -13,6 +15,14 @@ interface DashboardStats {
     programName: string;
     count: number;
   };
+  enrollmentTrend: Array<{
+    date: string;
+    count: number;
+  }>;
+  genderDistribution: Array<{
+    gender: string;
+    count: number;
+  }>;
 }
 
 export const getDashboardStats = async (): Promise<ApiResponse<DashboardStats>> => {
@@ -20,6 +30,7 @@ export const getDashboardStats = async (): Promise<ApiResponse<DashboardStats>> 
     const response = await fetch('http://localhost:3000/api/analytics/dashboard', {
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`,
       },
     });
 

@@ -11,6 +11,10 @@ import clientRoutes from './routes/clientRoutes';
 import enrollmentRoutes from './routes/enrollmentRoutes';
 import authRoutes from './routes/authRoutes'; // Import auth routes
 import analyticsRoutes from './routes/analyticsRoutes'; // Import analytics routes
+import auditLogRoutes from './routes/auditLogRoutes'; // Import audit log routes
+
+// Import middleware
+import { auditLogger } from './middleware/auditLogger';
 
 dotenv.config();
 
@@ -34,10 +38,11 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 // Mount Routes
 // Note: Base path is /api for all routes below, matching the server URL in swaggerConfig
 app.use('/api/auth', authRoutes);
-app.use('/api/health-programs', healthProgramRoutes);
-app.use('/api/clients', clientRoutes); // Handles /api/clients and /api/clients/:clientId/enrollments
-app.use('/api/enrollments', enrollmentRoutes); // Handles direct enrollment routes like /api/enrollments/:id
+app.use('/api/health-programs', auditLogger('program'), healthProgramRoutes);
+app.use('/api/clients', auditLogger('client'), clientRoutes); // Handles /api/clients and /api/clients/:clientId/enrollments
+app.use('/api/enrollments', auditLogger('enrollment'), enrollmentRoutes); // Handles direct enrollment routes like /api/enrollments/:id
 app.use('/api/analytics', analyticsRoutes); // Add analytics routes
+app.use('/api/audit-logs', auditLogRoutes); // Add audit log routes
 
 const PORT = process.env.PORT || 5000;
 
