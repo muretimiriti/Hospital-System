@@ -1,24 +1,26 @@
+import { EntityId, ISODateString, Gender } from './common';
+
 // Core client data structure
 export interface Client {
-  id: string;
+  id: EntityId;
   firstName: string;
   lastName: string;
-  dateOfBirth: string;
-  gender: 'male' | 'female' | 'other';
+  dateOfBirth: ISODateString;
+  gender: Gender;
   contactNumber: string;
   email: string;
   address: string;
-  enrolledPrograms: string[]; // Array of program IDs
-  createdAt: string;
-  updatedAt: string;
+  enrolledPrograms: EntityId[];
+  createdAt: ISODateString;
+  updatedAt: ISODateString;
 }
 
 // Input type for creating a new client
 export interface CreateClientInput {
   firstName: string;
   lastName: string;
-  dateOfBirth: string;
-  gender: 'male' | 'female' | 'other';
+  dateOfBirth: ISODateString;
+  gender: Gender;
   contactNumber: string;
   email: string;
   address: string;
@@ -28,8 +30,8 @@ export interface CreateClientInput {
 export interface UpdateClientInput {
   firstName?: string;
   lastName?: string;
-  dateOfBirth?: string;
-  gender?: 'male' | 'female' | 'other';
+  dateOfBirth?: ISODateString;
+  gender?: Gender;
   contactNumber?: string;
   email?: string;
   address?: string;
@@ -37,9 +39,9 @@ export interface UpdateClientInput {
 
 // Extended client type that includes program details
 export interface ClientWithPrograms extends Client {
-  programDetails: {
-    id: string;
+  programDetails: Array<{
+    id: EntityId;
     name: string;
     description: string;
-  }[];
+  }>;
 } 
