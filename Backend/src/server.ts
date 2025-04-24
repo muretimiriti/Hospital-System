@@ -3,6 +3,10 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import connectDB from './config/db';
 
+// Import routes
+import healthProgramRoutes from './routes/healthProgramRoutes';
+// TODO: Import other routes (client, enrollment, auth)
+
 dotenv.config();
 
 const app: Express = express();
@@ -19,7 +23,9 @@ app.get('/', (req: Request, res: Response) => {
   res.send('Hospital System API Running');
 });
 
-// TODO: Add other routes (programs, clients, enrollments, auth)
+// Mount Routes
+app.use('/api/health-programs', healthProgramRoutes);
+// TODO: Add other routes (clients, enrollments, auth)
 
 const PORT = process.env.PORT || 5000;
 
