@@ -1,14 +1,15 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaHospital, FaUserMd, FaUsers } from 'react-icons/fa';
+import { FaHospital, FaUserMd, FaUsers, FaChartBar } from 'react-icons/fa';
 import { HealthPrograms } from './components/health-programs/HealthPrograms';
 import { Clients } from './components/clients/Clients';
 import { ClientProfile } from './components/clients/ClientProfile';
+import Dashboard from './components/Dashboard';
 import { NotificationProvider } from './contexts/NotificationContext';
 import { theme } from './styles/theme';
 
 function App() {
-  const [activeTab, setActiveTab] = useState<'programs' | 'clients'>('programs');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'programs' | 'clients'>('dashboard');
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
 
   // Handle client selection
@@ -35,6 +36,25 @@ function App() {
                 </h1>
               </div>
               <div className="flex space-x-4">
+                <motion.button
+                  onClick={() => {
+                    setActiveTab('dashboard');
+                    setSelectedClientId(null);
+                  }}
+                  className={`px-4 py-2 rounded flex items-center ${
+                    activeTab === 'dashboard'
+                      ? 'text-white'
+                      : 'text-gray-700 hover:bg-gray-100'
+                  }`}
+                  style={{
+                    backgroundColor: activeTab === 'dashboard' ? theme.colors.primary.main : 'transparent',
+                  }}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <FaChartBar className="mr-2" />
+                  Dashboard
+                </motion.button>
                 <motion.button
                   onClick={() => {
                     setActiveTab('programs');
@@ -81,7 +101,16 @@ function App() {
         {/* Main Content */}
         <main className="container mx-auto px-4 py-8">
           <AnimatePresence mode="wait">
-            {activeTab === 'programs' ? (
+            {activeTab === 'dashboard' ? (
+              <motion.div
+                key="dashboard"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+              >
+                <Dashboard />
+              </motion.div>
+            ) : activeTab === 'programs' ? (
               <motion.div
                 key="programs"
                 initial={{ opacity: 0, y: 20 }}
