@@ -9,6 +9,7 @@ import {
 } from '../controllers/clientController';
 import enrollmentRoutes from './enrollmentRoutes'; // Import enrollment routes
 import { protect } from '../middleware/authMiddleware'; // Ensure this path is correct
+import asyncHandler from '../utils/asyncHandler'; // Create this utility file
 
 const router = express.Router();
 
@@ -128,13 +129,13 @@ const router = express.Router();
  *             schema:
  *               type: array
  *               items:
- *                 $ref: '#/components/schemas/ClientOutput' # Use Output schema (without populated enrollments)
+ *                 $ref: '#/components/schemas/ClientOutput'
  *       400:
  *         description: Search query parameter 'q' is required
  *       500:
  *         description: Server error
  */
-router.get('/search', searchClients);
+router.get('/search', asyncHandler(searchClients));
 
 /**
  * @swagger
@@ -166,7 +167,7 @@ router.get('/search', searchClients);
  *       500:
  *         description: Server error
  */
-router.post('/', protect, createClient);
+router.post('/', protect, asyncHandler(createClient));
 
 /**
  * @swagger
@@ -186,7 +187,7 @@ router.post('/', protect, createClient);
  *       500:
  *         description: Server error
  */
-router.get('/', getAllClients);
+router.get('/', asyncHandler(getAllClients));
 
 /**
  * @swagger
@@ -214,7 +215,7 @@ router.get('/', getAllClients);
  *       500:
  *         description: Server error
  */
-router.get('/:id', protect, getClientById);
+router.get('/:id', protect, asyncHandler(getClientById));
 
 /**
  * @swagger
@@ -231,7 +232,7 @@ router.get('/:id', protect, getClientById);
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/ClientInput' # Input schema for updates
+ *             $ref: '#/components/schemas/ClientInput'
  *     responses:
  *       200:
  *         description: Client updated successfully
@@ -250,7 +251,7 @@ router.get('/:id', protect, getClientById);
  *       500:
  *         description: Server error
  */
-router.put('/:id', protect, updateClient);
+router.put('/:id', protect, asyncHandler(updateClient));
 
 /**
  * @swagger
@@ -282,7 +283,7 @@ router.put('/:id', protect, updateClient);
  *       500:
  *         description: Server error
  */
-router.delete('/:id', protect, deleteClient);
+router.delete('/:id', protect, asyncHandler(deleteClient));
 
 // --- Re-route to Enrollment Router for nested routes ---
 // Use enrollmentRoutes for paths like /api/clients/:clientId/enrollments

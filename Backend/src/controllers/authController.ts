@@ -26,10 +26,10 @@ export const registerUser = async (req: Request, res: Response) => {
     await user.save();
 
     // Generate token
-    const token = generateToken(user._id.toString());
+    const token = generateToken(user._id!.toString());
 
     res.status(201).json({
-      _id: user._id,
+      _id: user._id!,
       email: user.email,
       token: token,
     });
@@ -56,10 +56,10 @@ export const loginUser = async (req: Request, res: Response) => {
     // Check if user exists and password matches
     if (user && (await user.comparePassword(password))) {
       // Generate token
-      const token = generateToken(user._id.toString());
+      const token = generateToken(user._id!.toString());
 
       res.status(200).json({
-        _id: user._id,
+        _id: user._id!,
         email: user.email,
         token: token,
       });

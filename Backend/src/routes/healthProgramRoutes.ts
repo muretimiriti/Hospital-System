@@ -7,6 +7,7 @@ import {
   deleteProgram,
 } from '../controllers/healthProgramController';
 import { protect } from '../middleware/authMiddleware'; // Ensure this path is correct
+import asyncHandler from '../utils/asyncHandler'; // Import the wrapper
 
 const router = express.Router();
 
@@ -94,7 +95,7 @@ const router = express.Router();
  *       500:
  *         description: Server error
  */
-router.post('/', protect, createProgram); // Apply protect middleware
+router.post('/', protect, asyncHandler(createProgram)); // Apply protect middleware and asyncHandler
 
 /**
  * @swagger
@@ -114,7 +115,7 @@ router.post('/', protect, createProgram); // Apply protect middleware
  *       500:
  *         description: Server error
  */
-router.get('/', getAllPrograms);
+router.get('/', asyncHandler(getAllPrograms)); // Apply to non-protected async handlers too
 
 /**
  * @swagger
@@ -143,7 +144,7 @@ router.get('/', getAllPrograms);
  *       500:
  *         description: Server error
  */
-router.get('/:id', getProgramById);
+router.get('/:id', asyncHandler(getProgramById)); // Apply to non-protected async handlers too
 
 /**
  * @swagger
@@ -192,7 +193,7 @@ router.get('/:id', getProgramById);
  *       500:
  *         description: Server error
  */
-router.put('/:id', protect, updateProgram); // Apply protect middleware
+router.put('/:id', protect, asyncHandler(updateProgram)); // Apply protect middleware and asyncHandler
 
 /**
  * @swagger
@@ -229,6 +230,6 @@ router.put('/:id', protect, updateProgram); // Apply protect middleware
  *       500:
  *         description: Server error
  */
-router.delete('/:id', protect, deleteProgram); // Apply protect middleware
+router.delete('/:id', protect, asyncHandler(deleteProgram)); // Apply protect middleware and asyncHandler
 
 export default router; 

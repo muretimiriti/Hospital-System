@@ -5,6 +5,7 @@ import {
   getMe,
 } from '../controllers/authController';
 import { protect } from '../middleware/authMiddleware'; // Import protect middleware
+import asyncHandler from '../utils/asyncHandler'; // Import the wrapper
 
 const router = express.Router();
 
@@ -61,7 +62,7 @@ const router = express.Router();
  *       500:
  *         description: Server error
  */
-router.post('/register', registerUser);
+router.post('/register', asyncHandler(registerUser));
 
 /**
  * @swagger
@@ -106,7 +107,7 @@ router.post('/register', registerUser);
  *       500:
  *         description: Server error
  */
-router.post('/login', loginUser);
+router.post('/login', asyncHandler(loginUser));
 
 /**
  * @swagger
@@ -138,6 +139,6 @@ router.post('/login', loginUser);
  *       500:
  *         description: Server error
  */
-router.get('/me', protect, getMe); // Protect this route
+router.get('/me', protect, asyncHandler(getMe)); // Protect this route
 
 export default router; 

@@ -12,7 +12,8 @@ declare global {
   }
 }
 
-export const protect = async (req: Request, res: Response, next: NextFunction) => {
+// Explicitly type the return value as Promise<void>
+export const protect = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   let token;
 
   // Check for token in Authorization header (Bearer token)
@@ -28,7 +29,9 @@ export const protect = async (req: Request, res: Response, next: NextFunction) =
       const decoded = verifyToken(token);
 
       if (!decoded) {
-        return res.status(401).json({ message: 'Not authorized, token failed' });
+        // Send response, function completes
+        res.status(401).json({ message: 'Not authorized, token failed' });
+        return;
       }
 
       // Get user from the token ID (excluding password)
@@ -36,17 +39,25 @@ export const protect = async (req: Request, res: Response, next: NextFunction) =
 
       if (!req.user) {
         // User belonging to the token no longer exists
-        return res.status(401).json({ message: 'Not authorized, user not found' });
+        // Send response, function completes
+        res.status(401).json({ message: 'Not authorized, user not found' });
+        return;
       }
 
       next(); // Proceed to the next middleware or route handler
     } catch (error) {
       console.error('Token verification error:', error);
+      // Send response, function completes
       res.status(401).json({ message: 'Not authorized, token verification failed' });
+      return;
     }
-  }
-
-  if (!token) {
+  } else { // Added else block for clarity when no token
+    // Send response if no token found
     res.status(401).json({ message: 'Not authorized, no token provided' });
+    return;
   }
+  
+  // Ensure no accidental fall-through if logic changes - though current structure prevents it
+  // If next() wasn't called and no response sent, something is wrong.
+  // However, the explicit returns above handle all paths.
 }; 

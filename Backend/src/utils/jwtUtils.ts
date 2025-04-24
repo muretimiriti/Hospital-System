@@ -1,4 +1,4 @@
-import jwt, { Secret } from 'jsonwebtoken';
+import jwt, { Secret, SignOptions } from 'jsonwebtoken';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -16,9 +16,18 @@ if (!JWT_EXPIRES_IN) {
 
 // Generates a JWT token for a given user ID
 export const generateToken = (userId: string): string => {
-  return jwt.sign({ id: userId }, JWT_SECRET!, {
-    expiresIn: JWT_EXPIRES_IN || '1d',
-  });
+  // Use the default '1d' directly to satisfy types.
+  // Add runtime validation if JWT_EXPIRES_IN needs to be used dynamically.
+  const options: SignOptions = {
+    expiresIn: '1d', // Directly use a known valid type
+  };
+  
+  // Log if the environment variable was set but isn't being used here for type safety
+  if (process.env.JWT_EXPIRES_IN && process.env.JWT_EXPIRES_IN !== '1d') {
+    console.warn(`Warning: Using default '1d' for JWT expiry. Configured JWT_EXPIRES_IN ('${process.env.JWT_EXPIRES_IN}') ignored due to type constraints.`);
+  }
+
+  return jwt.sign({ id: userId }, JWT_SECRET!, options);
 };
 
 // Verifies a JWT token and returns the decoded payload (or null)

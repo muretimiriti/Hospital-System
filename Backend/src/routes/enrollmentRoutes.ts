@@ -8,6 +8,7 @@ import {
   deleteEnrollment,
 } from '../controllers/enrollmentController';
 import { protect } from '../middleware/authMiddleware'; // Ensure this path is correct
+import asyncHandler from '../utils/asyncHandler'; // Import the wrapper
 
 const router = express.Router({ mergeParams: true }); // Enable merging params from parent routers (like client router)
 
@@ -123,7 +124,7 @@ const router = express.Router({ mergeParams: true }); // Enable merging params f
  */
 // Route to create a new enrollment
 // POST /api/enrollments
-router.post('/', protect, createEnrollment); // Apply protect middleware
+router.post('/', protect, asyncHandler(createEnrollment)); // Apply wrapper
 
 /**
  * @swagger
@@ -151,7 +152,7 @@ router.post('/', protect, createEnrollment); // Apply protect middleware
 // Route to get all enrollments (or filter)
 // GET /api/enrollments
 // Protect viewing all enrollments
-router.get('/', protect, getAllEnrollments); // Apply protect middleware
+router.get('/', protect, asyncHandler(getAllEnrollments)); // Apply wrapper
 
 // --- Routes specific to a client ---
 // Mounted via client routes: /api/clients/:clientId/enrollments
@@ -191,7 +192,7 @@ router.get('/', protect, getAllEnrollments); // Apply protect middleware
  */
 // Route to get all enrollments for a specific client
 // GET /api/clients/:clientId/enrollments
-router.get('/', protect, getClientEnrollments); // Apply protect middleware
+router.get('/', protect, asyncHandler(getClientEnrollments)); // Apply wrapper
 
 // --- Routes specific to an enrollment ID ---
 
@@ -224,7 +225,7 @@ router.get('/', protect, getClientEnrollments); // Apply protect middleware
 // Route to get a single enrollment by ID
 // GET /api/enrollments/:id
 // Protect viewing specific enrollment details
-router.get('/:id', protect, getEnrollmentById); // Apply protect middleware
+router.get('/:id', protect, asyncHandler(getEnrollmentById)); // Apply wrapper
 
 /**
  * @swagger
@@ -269,7 +270,7 @@ router.get('/:id', protect, getEnrollmentById); // Apply protect middleware
  */
 // Route to update an enrollment by ID
 // PUT /api/enrollments/:id
-router.put('/:id', protect, updateEnrollment); // Apply protect middleware
+router.put('/:id', protect, asyncHandler(updateEnrollment)); // Apply wrapper
 
 /**
  * @swagger
@@ -303,6 +304,6 @@ router.put('/:id', protect, updateEnrollment); // Apply protect middleware
  */
 // Route to delete an enrollment by ID
 // DELETE /api/enrollments/:id
-router.delete('/:id', protect, deleteEnrollment); // Apply protect middleware
+router.delete('/:id', protect, asyncHandler(deleteEnrollment)); // Apply wrapper
 
 export default router; 

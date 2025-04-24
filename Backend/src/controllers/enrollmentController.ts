@@ -3,7 +3,7 @@ import Enrollment, { IEnrollment } from '../models/Enrollment';
 import Client from '../models/Client';
 import HealthProgram from '../models/HealthProgram';
 import { handleMongooseError } from '../utils/errorHandler';
-import mongoose from 'mongoose';
+import mongoose, { Types } from 'mongoose';
 
 // Helper function to validate ObjectId
 const isValidObjectId = (id: string): boolean => mongoose.Types.ObjectId.isValid(id);
@@ -34,7 +34,7 @@ export const createEnrollment = async (req: Request, res: Response) => {
     await newEnrollment.save();
 
     // Add enrollment reference to the client document
-    clientExists.enrolledPrograms.push(newEnrollment._id);
+    clientExists.enrolledPrograms.push(newEnrollment._id! as Types.ObjectId);
     await clientExists.save();
 
     res.status(201).json(newEnrollment);
