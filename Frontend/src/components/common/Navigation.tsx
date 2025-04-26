@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { FaHospital, FaUserMd, FaUsers, FaChartBar, FaHistory, FaBars, FaTimes, FaSignOutAlt } from 'react-icons/fa';
+import { FaHospital, FaUserMd, FaUsers, FaChartBar, FaHistory, FaBars, FaTimes, FaSignOutAlt, FaHome, FaClipboardList, FaUserPlus } from 'react-icons/fa';
 import { theme } from '../../styles/theme';
 
 const Navigation: React.FC = () => {
@@ -14,6 +14,7 @@ const Navigation: React.FC = () => {
     { id: 'dashboard', label: 'Dashboard', icon: FaChartBar, path: '/dashboard' },
     { id: 'programs', label: 'Health Programs', icon: FaUserMd, path: '/programs' },
     { id: 'clients', label: 'Clients', icon: FaUsers, path: '/clients' },
+    { id: 'clients/enroll', label: 'Enroll Client', icon: FaUserPlus, path: '/clients/enroll' },
     { id: 'audit', label: 'Audit Logs', icon: FaHistory, path: '/audit' }
   ] as const;
 

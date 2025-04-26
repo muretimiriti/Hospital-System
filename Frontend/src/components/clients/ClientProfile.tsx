@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { FaUser, FaEnvelope, FaPhone, FaAddressCard, FaCalendarAlt, FaVenusMars, FaPlus, FaTrash } from 'react-icons/fa';
 import { Client } from '../../types/client';
 import { HealthProgram } from '../../types/healthProgram';
-import { EnrollmentWithDetails, EnrollmentStatus } from '../../types/enrollment';
+import { EnrollmentWithDetails } from '../../types/enrollment';
 
 interface ClientProfileProps {
   clientId: string;
@@ -78,7 +78,7 @@ export const ClientProfile: React.FC<ClientProfileProps> = ({ clientId, onBack }
         body: JSON.stringify({
           clientId,
           programId: selectedProgram,
-          status: EnrollmentStatus.Active,
+          status: 'active',
           startDate: new Date().toISOString()
         })
       });
@@ -201,7 +201,7 @@ export const ClientProfile: React.FC<ClientProfileProps> = ({ clientId, onBack }
                 <FaVenusMars className="text-gray-400 mr-3" />
                 <div>
                   <p className="text-sm text-gray-500">Gender</p>
-                  <p className="font-medium capitalize">{client.gender}</p>
+                  <p className="font-medium">{client.gender}</p>
                 </div>
               </div>
             </div>
@@ -209,7 +209,7 @@ export const ClientProfile: React.FC<ClientProfileProps> = ({ clientId, onBack }
         </div>
       </div>
 
-      {/* Program Enrollments */}
+      {/* Enrollments */}
       <div className="bg-white rounded-lg shadow-md p-6">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold">Program Enrollments</h2>
@@ -217,7 +217,7 @@ export const ClientProfile: React.FC<ClientProfileProps> = ({ clientId, onBack }
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => setShowEnrollModal(true)}
-            className="flex items-center px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 flex items-center"
           >
             <FaPlus className="mr-2" />
             Enroll in Program
@@ -225,97 +225,75 @@ export const ClientProfile: React.FC<ClientProfileProps> = ({ clientId, onBack }
         </div>
 
         {enrollments.length === 0 ? (
-          <p className="text-gray-500">No program enrollments</p>
+          <p className="text-gray-500">No program enrollments yet.</p>
         ) : (
           <div className="space-y-4">
             {enrollments.map((enrollment) => (
-              <div key={enrollment.id} className="flex justify-between items-center p-4 bg-gray-50 rounded-md">
-                <div>
-                  <h3 className="font-medium">{enrollment.program.name}</h3>
-                  <p className="text-sm text-gray-500">{enrollment.program.description}</p>
-                  <p className="text-xs text-gray-400">
-                    Status: <span className="capitalize">{enrollment.status}</span>
-                  </p>
+              <div key={enrollment.id} className="border rounded-lg p-4">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="font-medium">{enrollment.program.name}</h3>
+                    <p className="text-sm text-gray-600 mt-1">{enrollment.program.description}</p>
+                    <div className="mt-2 space-y-1">
+                      <p className="text-sm text-gray-500">
+                        Status: <span className="capitalize">{enrollment.status}</span>
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        Enrolled on: {new Date(enrollment.enrollmentDate).toLocaleDateString()}
+                      </p>
+                      {enrollment.completionDate && (
+                        <p className="text-sm text-gray-500">
+                          Completed on: {new Date(enrollment.completionDate).toLocaleDateString()}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => handleUnenroll(enrollment.id)}
+                    className="text-red-500 hover:text-red-600"
+                  >
+                    <FaTrash />
+                  </button>
                 </div>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => handleUnenroll(enrollment.id)}
-                  className="text-red-500 hover:text-red-600"
-                >
-                  <FaTrash />
-                </motion.button>
               </div>
             ))}
           </div>
         )}
       </div>
 
-      {/* Enroll Modal */}
+      {/* Enrollment Modal */}
       {showEnrollModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6"
-          >
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-bold">Enroll in Program</h2>
+          <div className="bg-white rounded-lg p-6 max-w-md w-full">
+            <h3 className="text-xl font-semibold mb-4">Enroll in Program</h3>
+            <select
+              value={selectedProgram}
+              onChange={(e) => setSelectedProgram(e.target.value)}
+              className="w-full p-2 border border-gray-300 rounded-md mb-4"
+            >
+              <option value="">Select a program</option>
+              {programs.map((program) => (
+                <option key={program.id} value={program.id}>
+                  {program.name} - ${program.cost}
+                </option>
+              ))}
+            </select>
+            <div className="flex justify-end space-x-2">
               <button
                 onClick={() => setShowEnrollModal(false)}
-                className="text-gray-400 hover:text-gray-500"
+                className="px-4 py-2 text-gray-600 hover:text-gray-800"
               >
-                <span className="sr-only">Close</span>
-                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
+                Cancel
+              </button>
+              <button
+                onClick={handleEnroll}
+                disabled={!selectedProgram}
+                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
+              >
+                Enroll
               </button>
             </div>
-
-            <div className="space-y-4">
-              <div>
-                <label htmlFor="program" className="block text-sm font-medium text-gray-700">
-                  Select Program
-                </label>
-                <select
-                  id="program"
-                  value={selectedProgram}
-                  onChange={(e) => setSelectedProgram(e.target.value)}
-                  className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
-                >
-                  <option value="">Select a program</option>
-                  {programs.map((program) => (
-                    <option key={program.id} value={program.id}>
-                      {program.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="flex justify-end space-x-3">
-                <button
-                  type="button"
-                  onClick={() => setShowEnrollModal(false)}
-                  className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={handleEnroll}
-                  disabled={!selectedProgram}
-                  className={`px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${
-                    !selectedProgram
-                      ? 'bg-blue-300 cursor-not-allowed'
-                      : 'bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500'
-                  }`}
-                >
-                  Enroll
-                </button>
-              </div>
-            </div>
-          </motion.div>
+          </div>
         </div>
       )}
     </div>
