@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { getDashboardStats } from '../services/analyticsService';
+import { useNavigate } from 'react-router-dom';
 import {
   BarChart,
   Bar,
@@ -48,23 +49,37 @@ const Dashboard: React.FC = () => {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
+        // Check if user is authenticated
+        const token = localStorage.getItem('token');
+        if (!token) {
+          navigate('/login');
+          return;
+        }
+
         const response = await getDashboardStats();
         setStats(response.data);
         setError(null);
-      } catch (err) {
-        setError('Failed to load dashboard statistics');
-        console.error(err);
+      } catch (err: any) {
+        if (err.message === 'Failed to fetch dashboard stats' && err.status === 401) {
+          // Token is invalid or expired
+          localStorage.removeItem('token');
+          navigate('/login');
+        } else {
+          setError('Failed to load dashboard statistics');
+          console.error(err);
+        }
       } finally {
         setLoading(false);
       }
     };
 
     fetchStats();
-  }, []);
+  }, [navigate]);
 
   if (loading) {
     return (

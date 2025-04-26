@@ -1,13 +1,19 @@
-import { EntityId, ISODateString, EnrollmentStatus } from './common';
+import { EntityId, ISODateString } from './common';
+
+export enum EnrollmentStatus {
+  Active = 'active',
+  Completed = 'completed',
+  Cancelled = 'cancelled'
+}
 
 // Core enrollment data structure
 export interface Enrollment {
   id: EntityId;
   clientId: EntityId;
   programId: EntityId;
-  enrollmentDate: ISODateString;
   status: EnrollmentStatus;
-  notes?: string;
+  startDate: ISODateString;
+  endDate?: ISODateString;
   createdAt: ISODateString;
   updatedAt: ISODateString;
 }
@@ -16,13 +22,15 @@ export interface Enrollment {
 export interface CreateEnrollmentInput {
   clientId: EntityId;
   programId: EntityId;
-  notes?: string;
+  startDate: ISODateString;
+  endDate?: ISODateString;
 }
 
 // Input type for updating an enrollment
 export interface UpdateEnrollmentInput {
   status?: EnrollmentStatus;
-  notes?: string;
+  startDate?: ISODateString;
+  endDate?: ISODateString;
 }
 
 // Extended enrollment type that includes client and program details

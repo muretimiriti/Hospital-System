@@ -1,9 +1,10 @@
 import { HealthProgram, CreateHealthProgramInput, UpdateHealthProgramInput } from '../types/healthProgram';
+import { ApiResponse } from '../types/common';
 import { API_CONFIG, getAuthHeader } from '../config/api';
 
 export const healthProgramService = {
   // Get all health programs
-  async getAllPrograms(): Promise<HealthProgram[]> {
+  async getAllPrograms(): Promise<ApiResponse<HealthProgram[]>> {
     const response = await fetch(`${API_CONFIG.baseUrl}/health-programs`, {
       headers: {
         ...API_CONFIG.headers,
@@ -17,7 +18,7 @@ export const healthProgramService = {
   },
 
   // Get a single health program by ID
-  async getProgramById(id: string): Promise<HealthProgram> {
+  async getProgramById(id: string): Promise<ApiResponse<HealthProgram>> {
     const response = await fetch(`${API_CONFIG.baseUrl}/health-programs/${id}`, {
       headers: {
         ...API_CONFIG.headers,
@@ -31,7 +32,7 @@ export const healthProgramService = {
   },
 
   // Create a new health program
-  async createProgram(program: CreateHealthProgramInput): Promise<HealthProgram> {
+  async createProgram(program: CreateHealthProgramInput): Promise<ApiResponse<HealthProgram>> {
     const response = await fetch(`${API_CONFIG.baseUrl}/health-programs`, {
       method: 'POST',
       headers: {
@@ -47,7 +48,7 @@ export const healthProgramService = {
   },
 
   // Update an existing health program
-  async updateProgram(id: string, program: UpdateHealthProgramInput): Promise<HealthProgram> {
+  async updateProgram(id: string, program: UpdateHealthProgramInput): Promise<ApiResponse<HealthProgram>> {
     const response = await fetch(`${API_CONFIG.baseUrl}/health-programs/${id}`, {
       method: 'PUT',
       headers: {

@@ -1,22 +1,33 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaHospital, FaUserMd, FaUsers, FaChartBar, FaHistory, FaBars, FaTimes } from 'react-icons/fa';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { FaHospital, FaUserMd, FaUsers, FaChartBar, FaHistory, FaBars, FaTimes, FaSignOutAlt } from 'react-icons/fa';
 import { theme } from '../../styles/theme';
 
-interface NavigationProps {
-  activeTab: 'dashboard' | 'programs' | 'clients' | 'audit';
-  onTabChange: (tab: 'dashboard' | 'programs' | 'clients' | 'audit') => void;
-}
-
-const Navigation: React.FC<NavigationProps> = ({ activeTab, onTabChange }) => {
+const Navigation: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const token = localStorage.getItem('token');
 
   const navItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: FaChartBar },
-    { id: 'programs', label: 'Health Programs', icon: FaUserMd },
-    { id: 'clients', label: 'Clients', icon: FaUsers },
-    { id: 'audit', label: 'Audit Logs', icon: FaHistory }
+    { id: 'dashboard', label: 'Dashboard', icon: FaChartBar, path: '/dashboard' },
+    { id: 'programs', label: 'Health Programs', icon: FaUserMd, path: '/programs' },
+    { id: 'clients', label: 'Clients', icon: FaUsers, path: '/clients' },
+    { id: 'audit', label: 'Audit Logs', icon: FaHistory, path: '/audit' }
   ] as const;
+
+  const isActive = (path: string) => location.pathname === path;
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    navigate('/login');
+  };
+
+  // Don't render navigation if user is not logged in
+  if (!token) {
+    return null;
+  }
 
   return (
     <nav className="bg-white shadow-md">
@@ -29,26 +40,31 @@ const Navigation: React.FC<NavigationProps> = ({ activeTab, onTabChange }) => {
               Health Information System
             </h1>
           </div>
-          <div className="flex space-x-4">
+          <div className="flex items-center space-x-4">
             {navItems.map((item) => (
-              <motion.button
+              <Link
                 key={item.id}
-                onClick={() => onTabChange(item.id)}
+                to={item.path}
                 className={`px-4 py-2 rounded flex items-center ${
-                  activeTab === item.id
+                  isActive(item.path)
                     ? 'text-white'
                     : 'text-gray-700 hover:bg-gray-100'
                 }`}
                 style={{
-                  backgroundColor: activeTab === item.id ? theme.colors.primary.main : 'transparent',
+                  backgroundColor: isActive(item.path) ? theme.colors.primary.main : 'transparent',
                 }}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
               >
                 <item.icon className="mr-2" />
                 {item.label}
-              </motion.button>
+              </Link>
             ))}
+            <button
+              onClick={handleLogout}
+              className="px-4 py-2 rounded flex items-center text-gray-700 hover:bg-gray-100"
+            >
+              <FaSignOutAlt className="mr-2" />
+              Logout
+            </button>
           </div>
         </div>
 
@@ -79,27 +95,33 @@ const Navigation: React.FC<NavigationProps> = ({ activeTab, onTabChange }) => {
             >
               <div className="py-2 space-y-1">
                 {navItems.map((item) => (
-                  <motion.button
+                  <Link
                     key={item.id}
-                    onClick={() => {
-                      onTabChange(item.id);
-                      setIsMobileMenuOpen(false);
-                    }}
+                    to={item.path}
+                    onClick={() => setIsMobileMenuOpen(false)}
                     className={`w-full px-4 py-2 rounded flex items-center ${
-                      activeTab === item.id
+                      isActive(item.path)
                         ? 'text-white'
                         : 'text-gray-700 hover:bg-gray-100'
                     }`}
                     style={{
-                      backgroundColor: activeTab === item.id ? theme.colors.primary.main : 'transparent',
+                      backgroundColor: isActive(item.path) ? theme.colors.primary.main : 'transparent',
                     }}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
                   >
                     <item.icon className="mr-2" />
                     {item.label}
-                  </motion.button>
+                  </Link>
                 ))}
+                <button
+                  onClick={() => {
+                    handleLogout();
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="w-full px-4 py-2 rounded flex items-center text-gray-700 hover:bg-gray-100"
+                >
+                  <FaSignOutAlt className="mr-2" />
+                  Logout
+                </button>
               </div>
             </motion.div>
           )}

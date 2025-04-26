@@ -1,10 +1,11 @@
 // Import required dependencies from React
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { FaUserPlus, FaSearch } from 'react-icons/fa';
+import { FaUserPlus, FaSearch, FaPlus, FaUser } from 'react-icons/fa';
 import { Client } from '../../types/client';
 import Pagination from '../common/Pagination';
 import SortSelect from '../common/SortSelect';
+import AddClient from './AddClient';
 
 interface ClientsProps {
   onClientSelect: (clientId: string) => void;
@@ -17,6 +18,21 @@ const sortOptions = [
   { value: 'createdAt', label: 'Created Date' }
 ];
 
+// Transform server response to match our frontend types
+const transformClientData = (serverClient: any): Client => ({
+  id: serverClient._id,
+  firstName: serverClient.firstName,
+  lastName: serverClient.lastName,
+  dateOfBirth: serverClient.dateOfBirth,
+  gender: serverClient.gender,
+  contactNumber: serverClient.contactNumber,
+  email: serverClient.email,
+  address: serverClient.address,
+  enrolledPrograms: serverClient.enrolledPrograms || [],
+  createdAt: serverClient.createdAt,
+  updatedAt: serverClient.updatedAt
+});
+
 const Clients: React.FC<ClientsProps> = ({ onClientSelect }) => {
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
@@ -26,6 +42,7 @@ const Clients: React.FC<ClientsProps> = ({ onClientSelect }) => {
   const [totalPages, setTotalPages] = useState(1);
   const [sortBy, setSortBy] = useState('lastName');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [showAddClient, setShowAddClient] = useState(false);
 
   useEffect(() => {
     fetchClients();
@@ -53,7 +70,9 @@ const Clients: React.FC<ClientsProps> = ({ onClientSelect }) => {
       }
 
       const data = await response.json();
-      setClients(data.data);
+      // Transform the server response data
+      const transformedClients = data.data.map(transformClientData);
+      setClients(transformedClients);
       setTotalPages(data.pagination.totalPages);
       setError(null);
     } catch (err) {
@@ -73,6 +92,20 @@ const Clients: React.FC<ClientsProps> = ({ onClientSelect }) => {
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
   };
+
+  const handleAddClient = () => {
+    setShowAddClient(true);
+  };
+
+  const handleClientAdded = () => {
+    fetchClients();
+  };
+
+  const filteredClients = clients.filter(client => 
+    client.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    client.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    client.email.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   if (loading) {
     return (
@@ -98,9 +131,10 @@ const Clients: React.FC<ClientsProps> = ({ onClientSelect }) => {
         <motion.button
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
+          onClick={handleAddClient}
           className="w-full md:w-auto bg-blue-500 text-white px-4 py-2 rounded-md flex items-center justify-center"
         >
-          <FaUserPlus className="mr-2" />
+          <FaPlus className="mr-2" />
           Add Client
         </motion.button>
       </div>
@@ -140,7 +174,7 @@ const Clients: React.FC<ClientsProps> = ({ onClientSelect }) => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {clients.map((client) => (
+              {filteredClients.map((client) => (
                 <motion.tr
                   key={client.id}
                   onClick={() => onClientSelect(client.id)}
@@ -182,6 +216,13 @@ const Clients: React.FC<ClientsProps> = ({ onClientSelect }) => {
           onPageChange={handlePageChange}
         />
       </div>
+
+      {showAddClient && (
+        <AddClient
+          onClose={() => setShowAddClient(false)}
+          onSuccess={handleClientAdded}
+        />
+      )}
     </div>
   );
 };

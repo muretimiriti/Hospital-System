@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { HealthProgram } from '../../types/healthProgram';
 import { healthProgramService } from '../../services/healthProgramService';
+import { ApiResponse } from '../../types/common';
 
 export const HealthProgramList: React.FC = () => {
   const [programs, setPrograms] = useState<HealthProgram[]>([]);
@@ -14,8 +15,8 @@ export const HealthProgramList: React.FC = () => {
   const fetchPrograms = async () => {
     try {
       setLoading(true);
-      const data = await healthProgramService.getAllPrograms();
-      setPrograms(data);
+      const response = await healthProgramService.getAllPrograms();
+      setPrograms(response.data || []);
       setError(null);
     } catch (err) {
       setError('Failed to fetch health programs');
@@ -26,6 +27,11 @@ export const HealthProgramList: React.FC = () => {
   };
 
   const handleDelete = async (id: string) => {
+    if (!id) {
+      setError('Invalid program ID');
+      return;
+    }
+
     if (window.confirm('Are you sure you want to delete this program?')) {
       try {
         await healthProgramService.deleteProgram(id);
@@ -58,9 +64,23 @@ export const HealthProgramList: React.FC = () => {
               <div>
                 <h3 className="text-xl font-semibold">{program.name}</h3>
                 <p className="text-gray-600 mt-2">{program.description}</p>
-                <p className="text-sm text-gray-500 mt-2">
-                  Created: {new Date(program.createdAt).toLocaleDateString()}
-                </p>
+                <div className="mt-2 space-y-1">
+                  <p key={`${program.id}-duration`} className="text-sm text-gray-500">
+                    Duration: {program.duration} weeks
+                  </p>
+                  <p key={`${program.id}-cost`} className="text-sm text-gray-500">
+                    Cost: ${program.cost}
+                  </p>
+                  <p key={`${program.id}-participants`} className="text-sm text-gray-500">
+                    Participants: {program.currentParticipants}/{program.maxParticipants}
+                  </p>
+                  <p key={`${program.id}-startDate`} className="text-sm text-gray-500">
+                    Start Date: {new Date(program.startDate).toLocaleDateString()}
+                  </p>
+                  <p key={`${program.id}-endDate`} className="text-sm text-gray-500">
+                    End Date: {new Date(program.endDate).toLocaleDateString()}
+                  </p>
+                </div>
               </div>
               <div className="flex space-x-2">
                 <button

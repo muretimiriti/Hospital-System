@@ -1,4 +1,5 @@
 import { ApiResponse } from '../types/common';
+import { API_CONFIG, getAuthHeader } from '../config/api';
 
 
 interface DashboardStats {
@@ -27,10 +28,10 @@ interface DashboardStats {
 
 export const getDashboardStats = async (): Promise<ApiResponse<DashboardStats>> => {
   try {
-    const response = await fetch('http://localhost:3000/api/analytics/dashboard', {
+    const response = await fetch(`${API_CONFIG.baseUrl}/analytics/dashboard`, {
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        ...API_CONFIG.headers,
+        ...getAuthHeader(),
       },
     });
 
