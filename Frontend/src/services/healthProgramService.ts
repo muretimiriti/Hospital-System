@@ -1,11 +1,15 @@
 import { HealthProgram, CreateHealthProgramInput, UpdateHealthProgramInput } from '../types/healthProgram';
-
-const API_URL = 'http://localhost:3000/api'; // Update this with your actual API URL
+import { API_CONFIG, getAuthHeader } from '../config/api';
 
 export const healthProgramService = {
   // Get all health programs
   async getAllPrograms(): Promise<HealthProgram[]> {
-    const response = await fetch(`${API_URL}/health-programs`);
+    const response = await fetch(`${API_CONFIG.baseUrl}/health-programs`, {
+      headers: {
+        ...API_CONFIG.headers,
+        ...getAuthHeader(),
+      },
+    });
     if (!response.ok) {
       throw new Error('Failed to fetch health programs');
     }
@@ -14,7 +18,12 @@ export const healthProgramService = {
 
   // Get a single health program by ID
   async getProgramById(id: string): Promise<HealthProgram> {
-    const response = await fetch(`${API_URL}/health-programs/${id}`);
+    const response = await fetch(`${API_CONFIG.baseUrl}/health-programs/${id}`, {
+      headers: {
+        ...API_CONFIG.headers,
+        ...getAuthHeader(),
+      },
+    });
     if (!response.ok) {
       throw new Error('Failed to fetch health program');
     }
@@ -23,10 +32,11 @@ export const healthProgramService = {
 
   // Create a new health program
   async createProgram(program: CreateHealthProgramInput): Promise<HealthProgram> {
-    const response = await fetch(`${API_URL}/health-programs`, {
+    const response = await fetch(`${API_CONFIG.baseUrl}/health-programs`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
+        ...API_CONFIG.headers,
+        ...getAuthHeader(),
       },
       body: JSON.stringify(program),
     });
@@ -38,10 +48,11 @@ export const healthProgramService = {
 
   // Update an existing health program
   async updateProgram(id: string, program: UpdateHealthProgramInput): Promise<HealthProgram> {
-    const response = await fetch(`${API_URL}/health-programs/${id}`, {
+    const response = await fetch(`${API_CONFIG.baseUrl}/health-programs/${id}`, {
       method: 'PUT',
       headers: {
-        'Content-Type': 'application/json',
+        ...API_CONFIG.headers,
+        ...getAuthHeader(),
       },
       body: JSON.stringify(program),
     });
@@ -53,8 +64,12 @@ export const healthProgramService = {
 
   // Delete a health program
   async deleteProgram(id: string): Promise<void> {
-    const response = await fetch(`${API_URL}/health-programs/${id}`, {
+    const response = await fetch(`${API_CONFIG.baseUrl}/health-programs/${id}`, {
       method: 'DELETE',
+      headers: {
+        ...API_CONFIG.headers,
+        ...getAuthHeader(),
+      },
     });
     if (!response.ok) {
       throw new Error('Failed to delete health program');

@@ -1,7 +1,7 @@
 import express from 'express';
 import {
   createProgram,
-  getAllPrograms,
+  getPrograms,
   getProgramById,
   updateProgram,
   deleteProgram,
@@ -115,7 +115,7 @@ router.post('/', protect, asyncHandler(createProgram)); // Apply protect middlew
  *       500:
  *         description: Server error
  */
-router.get('/', asyncHandler(getAllPrograms)); // Apply to non-protected async handlers too
+router.get('/', asyncHandler(getPrograms)); // Apply to non-protected async handlers too
 
 /**
  * @swagger

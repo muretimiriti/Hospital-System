@@ -1,7 +1,7 @@
 import express from 'express';
 import {
   createClient,
-  getAllClients,
+  getClients,
   getClientById,
   updateClient,
   deleteClient,
@@ -187,7 +187,7 @@ router.post('/', protect, asyncHandler(createClient));
  *       500:
  *         description: Server error
  */
-router.get('/', asyncHandler(getAllClients));
+router.get('/', asyncHandler(getClients));
 
 /**
  * @swagger

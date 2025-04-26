@@ -4,6 +4,7 @@ import cors from 'cors';
 import connectDB from './config/db';
 import swaggerUi from 'swagger-ui-express';
 import swaggerSpec from './config/swaggerConfig'; // Import Swagger config
+import corsOptions from './config/cors'; // Import CORS config
 
 // Import routes
 import healthProgramRoutes from './routes/healthProgramRoutes';
@@ -24,7 +25,7 @@ const app: Express = express();
 connectDB();
 
 // Init Middleware
-app.use(cors()); // Enable CORS for all origins
+app.use(cors(corsOptions)); // Enable CORS with options
 app.use(express.json()); // Allow express to parse JSON body
 
 // Define a simple root route
