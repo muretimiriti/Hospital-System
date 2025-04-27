@@ -1,5 +1,3 @@
-import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { HealthPrograms } from './components/health-programs/HealthPrograms';
 import Clients from './components/clients/Clients';
@@ -13,7 +11,13 @@ import { NotificationProvider } from './contexts/NotificationContext';
 import { theme } from './styles/theme';
 import { EnrollmentsPage } from './components/enrollments/EnrollmentsPage';
 
-// Protected Route component
+/**
+ * ProtectedRoute Component
+ * A wrapper component that checks for authentication token
+ * Redirects to login if no token is found
+ * @param {Object} props - Component props
+ * @param {React.ReactNode} props.children - Child components to render if authenticated
+ */
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const token = localStorage.getItem('token');
   if (!token) {
@@ -22,7 +26,13 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
-// Public Route component (for login/register)
+/**
+ * PublicRoute Component
+ * A wrapper component for public routes (login/register)
+ * Redirects to dashboard if user is already authenticated
+ * @param {Object} props - Component props
+ * @param {React.ReactNode} props.children - Child components to render if not authenticated
+ */
 const PublicRoute = ({ children }: { children: React.ReactNode }) => {
   const token = localStorage.getItem('token');
   if (token) {
@@ -31,13 +41,20 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
-// AppRoutes component to handle routing
+/**
+ * AppRoutes Component
+ * Defines all application routes and their protection status
+ * Uses React Router for navigation
+ */
 const AppRoutes = () => {
   const navigate = useNavigate();
 
   return (
     <Routes>
+      {/* Redirect root to dashboard */}
       <Route path="/" element={<Navigate to="/dashboard" replace />} />
+      
+      {/* Public routes */}
       <Route path="/login" element={
         <PublicRoute>
           <Login />
@@ -48,6 +65,8 @@ const AppRoutes = () => {
           <Register />
         </PublicRoute>
       } />
+      
+      {/* Protected routes */}
       <Route path="/dashboard" element={
         <ProtectedRoute>
           <Dashboard />
@@ -78,11 +97,18 @@ const AppRoutes = () => {
           <ClientProfile />
         </ProtectedRoute>
       } />
+      
+      {/* Fallback route */}
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
   );
 };
 
+/**
+ * Main App Component
+ * Sets up the application structure with routing and global providers
+ * Includes navigation, main content area, and footer
+ */
 function App() {
   return (
     <Router>

@@ -14,7 +14,8 @@ export const enrollmentService = {
       const error = await response.json();
       throw new Error(error.message || 'Failed to fetch enrollments');
     }
-    return response.json();
+    const data = await response.json();
+    return Array.isArray(data) ? data : [];
   },
 
   // Fetch enrollments for a specific client

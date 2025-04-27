@@ -19,6 +19,10 @@ import {
 import { motion } from 'framer-motion';
 import { FaUsers, FaUserMd, FaChartLine, FaCalendarAlt } from 'react-icons/fa';
 
+/**
+ * Interface defining the structure of dashboard statistics
+ * Includes various metrics and data points for visualization
+ */
 interface DashboardStats {
   totalClients: number;
   totalPrograms: number;
@@ -43,14 +47,26 @@ interface DashboardStats {
   }>;
 }
 
+/**
+ * Color palette for charts and visualizations
+ */
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
 
+/**
+ * Dashboard Component
+ * Displays an overview of system statistics and analytics
+ * Includes interactive charts and key metrics
+ */
 const Dashboard: React.FC = () => {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
+  /**
+   * Fetch dashboard statistics on component mount
+   * Handles authentication and error states
+   */
   useEffect(() => {
     const fetchStats = async () => {
       try {
@@ -81,6 +97,7 @@ const Dashboard: React.FC = () => {
     fetchStats();
   }, [navigate]);
 
+  // Loading state
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -89,6 +106,7 @@ const Dashboard: React.FC = () => {
     );
   }
 
+  // Error state
   if (error) {
     return (
       <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
@@ -98,12 +116,14 @@ const Dashboard: React.FC = () => {
     );
   }
 
+  // No data state
   if (!stats) {
     return null;
   }
 
   return (
     <div className="p-6">
+      {/* Dashboard Title */}
       <motion.h1 
         className="text-3xl font-bold mb-8 text-gray-800"
         initial={{ opacity: 0, y: -20 }}
@@ -113,8 +133,9 @@ const Dashboard: React.FC = () => {
         Dashboard Overview
       </motion.h1>
       
-      {/* Stats Cards */}
+      {/* Key Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {/* Total Clients Card */}
         <motion.div 
           className="bg-white rounded-lg shadow-lg p-6 transform hover:scale-105 transition-transform"
           initial={{ opacity: 0, x: -20 }}
@@ -132,6 +153,7 @@ const Dashboard: React.FC = () => {
           </div>
         </motion.div>
 
+        {/* Total Programs Card */}
         <motion.div 
           className="bg-white rounded-lg shadow-lg p-6 transform hover:scale-105 transition-transform"
           initial={{ opacity: 0, x: -20 }}
@@ -149,6 +171,7 @@ const Dashboard: React.FC = () => {
           </div>
         </motion.div>
 
+        {/* Total Enrollments Card */}
         <motion.div 
           className="bg-white rounded-lg shadow-lg p-6 transform hover:scale-105 transition-transform"
           initial={{ opacity: 0, x: -20 }}
@@ -166,6 +189,7 @@ const Dashboard: React.FC = () => {
           </div>
         </motion.div>
 
+        {/* Most Popular Program Card */}
         <motion.div 
           className="bg-white rounded-lg shadow-lg p-6 transform hover:scale-105 transition-transform"
           initial={{ opacity: 0, x: -20 }}

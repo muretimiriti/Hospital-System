@@ -54,11 +54,13 @@ export const EnrollmentsPage: React.FC = () => {
         programsRes.json()
       ]);
 
-      setEnrollments(enrollmentsData.data || []);
-      setClients(clientsData.data || []);
-      setPrograms(programsData.data || []);
+      // Handle the response data structure correctly
+      setEnrollments(Array.isArray(enrollmentsData) ? enrollmentsData : []);
+      setClients(Array.isArray(clientsData) ? clientsData : []);
+      setPrograms(Array.isArray(programsData) ? programsData : []);
       setError(null);
     } catch (err: any) {
+      console.error('Error fetching data:', err);
       setError(err.message || 'Failed to load data');
       setEnrollments([]);
       setClients([]);
@@ -77,29 +79,63 @@ export const EnrollmentsPage: React.FC = () => {
     if (!enrollment) return false;
     
     // Search query - case insensitive
-    const searchLower = searchQuery.toLowerCase();
+    const searchLower = searchQuery.toLowerCase().trim();
     const matchesSearch = searchQuery === '' || 
       (enrollment.client?.firstName?.toLowerCase().includes(searchLower) ||
       enrollment.client?.lastName?.toLowerCase().includes(searchLower) ||
       enrollment.program?.name?.toLowerCase().includes(searchLower) ||
-      enrollment.program?.description?.toLowerCase().includes(searchLower));
+      enrollment.program?.description?.toLowerCase().includes(searchLower) ||
+      enrollment.status?.toLowerCase().includes(searchLower));
 
     // Status filter
-    const matchesStatus = filters.status === 'all' || enrollment.status === filters.status;
+    const matchesStatus = filters.status === 'all' || 
+      enrollment.status?.toLowerCase() === filters.status.toLowerCase();
 
     // Program filter - handle both id and _id
     const matchesProgram = filters.program === 'all' || 
-      enrollment.program?.id === filters.program || 
+      enrollment.program?.id === filters.program ||
       enrollment.program?._id === filters.program;
 
-    // Date range filter
-    const enrollmentStartDate = new Date(enrollment.startDate);
-    const filterStartDate = filters.startDate ? new Date(filters.startDate) : null;
-    const filterEndDate = filters.endDate ? new Date(filters.endDate) : null;
+    // Date range filter with proper date handling
+    let matchesDateRange = true;
+    if (filters.startDate || filters.endDate) {
+      try {
+        const enrollmentStartDate = new Date(enrollment.startDate);
+        const enrollmentEndDate = enrollment.endDate ? new Date(enrollment.endDate) : null;
+        
+        if (filters.startDate) {
+          const filterStartDate = new Date(filters.startDate);
+          filterStartDate.setHours(0, 0, 0, 0);
+          matchesDateRange = matchesDateRange && enrollmentStartDate >= filterStartDate;
+        }
+        
+        if (filters.endDate) {
+          const filterEndDate = new Date(filters.endDate);
+          filterEndDate.setHours(23, 59, 59, 999);
+          matchesDateRange = matchesDateRange && 
+            (enrollmentStartDate <= filterEndDate || 
+             (enrollmentEndDate && enrollmentEndDate <= filterEndDate));
+        }
+      } catch (error) {
+        console.error('Error processing date filter:', error);
+        matchesDateRange = true; // If date parsing fails, don't filter out the record
+      }
+    }
 
-    const matchesDateRange = 
-      (!filterStartDate || enrollmentStartDate >= filterStartDate) &&
-      (!filterEndDate || enrollmentStartDate <= filterEndDate);
+    // Debug logging
+    if (searchQuery || filters.status !== 'all' || filters.program !== 'all' || filters.startDate || filters.endDate) {
+      console.log('Filtering enrollment:', {
+        id: enrollment.id,
+        client: enrollment.client,
+        program: enrollment.program,
+        status: enrollment.status,
+        startDate: enrollment.startDate,
+        matchesSearch,
+        matchesStatus,
+        matchesProgram,
+        matchesDateRange
+      });
+    }
 
     return matchesSearch && matchesStatus && matchesProgram && matchesDateRange;
   }) || [];

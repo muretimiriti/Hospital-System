@@ -2,6 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { FaHistory, FaFilter } from 'react-icons/fa';
 
+/**
+ * Interface defining the structure of an audit log entry
+ * Represents a single action performed in the system
+ */
 interface AuditLog {
   id: string;
   userId: string;
@@ -13,10 +17,18 @@ interface AuditLog {
   createdAt: string;
 }
 
+/**
+ * AuditLogs Component
+ * Displays a list of system audit logs with filtering capabilities
+ * Shows user actions, entity changes, and timestamps
+ */
 const AuditLogs: React.FC = () => {
+  // State for managing logs, loading state, and errors
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // State for filter options
   const [filters, setFilters] = useState({
     entityType: '',
     action: '',
@@ -24,15 +36,23 @@ const AuditLogs: React.FC = () => {
     endDate: ''
   });
 
+  /**
+   * Fetch logs when filters change
+   */
   useEffect(() => {
     fetchLogs();
   }, [filters]);
 
+  /**
+   * Fetch audit logs from the API with current filter settings
+   * Handles authentication and error states
+   */
   const fetchLogs = async () => {
     try {
       setLoading(true);
       const queryParams = new URLSearchParams();
       
+      // Add filter parameters to query string
       if (filters.entityType) queryParams.append('entityType', filters.entityType);
       if (filters.action) queryParams.append('action', filters.action);
       if (filters.startDate) queryParams.append('startDate', filters.startDate);
@@ -59,11 +79,16 @@ const AuditLogs: React.FC = () => {
     }
   };
 
+  /**
+   * Handle changes to filter inputs
+   * Updates the filters state and triggers a new fetch
+   */
   const handleFilterChange = (e: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>) => {
     const { name, value } = e.target;
     setFilters(prev => ({ ...prev, [name]: value }));
   };
 
+  // Loading state
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -72,6 +97,7 @@ const AuditLogs: React.FC = () => {
     );
   }
 
+  // Error state
   if (error) {
     return (
       <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
@@ -83,6 +109,7 @@ const AuditLogs: React.FC = () => {
 
   return (
     <div className="p-6">
+      {/* Page Title */}
       <motion.h1 
         className="text-3xl font-bold mb-8 text-gray-800 flex items-center"
         initial={{ opacity: 0, y: -20 }}
@@ -93,7 +120,7 @@ const AuditLogs: React.FC = () => {
         Audit Logs
       </motion.h1>
       
-      {/* Filters */}
+      {/* Filter Section */}
       <motion.div 
         className="bg-white rounded-lg shadow-lg p-6 mb-8"
         initial={{ opacity: 0, y: 20 }}
@@ -105,6 +132,7 @@ const AuditLogs: React.FC = () => {
           Filters
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          {/* Entity Type Filter */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Entity Type</label>
             <select
@@ -120,6 +148,7 @@ const AuditLogs: React.FC = () => {
             </select>
           </div>
           
+          {/* Action Type Filter */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Action</label>
             <select
@@ -136,6 +165,7 @@ const AuditLogs: React.FC = () => {
             </select>
           </div>
           
+          {/* Date Range Filters */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
             <input
@@ -169,6 +199,7 @@ const AuditLogs: React.FC = () => {
       >
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
+            {/* Table Header */}
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
@@ -178,6 +209,7 @@ const AuditLogs: React.FC = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Details</th>
               </tr>
             </thead>
+            {/* Table Body */}
             <tbody className="bg-white divide-y divide-gray-200">
               {logs.map((log) => (
                 <motion.tr 
@@ -203,7 +235,7 @@ const AuditLogs: React.FC = () => {
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {log.entityType} ({log.entityId})
+                    {log.entityType}
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-500">
                     {log.details}
