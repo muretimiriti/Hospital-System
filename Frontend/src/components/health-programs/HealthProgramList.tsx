@@ -20,11 +20,18 @@ export const HealthProgramList: React.FC = () => {
     try {
       setLoading(true);
       const response = await healthProgramService.getAllPrograms();
-      setPrograms(response.data || []);
+      console.log('Health Programs Response:', response);
+      const transformedData = response.data.map(program => ({
+        ...program,
+        id: program._id,
+        _id: undefined
+      }));
+      console.log('Transformed Program Data:', transformedData);
+      setPrograms(transformedData || []);
       setError(null);
     } catch (err) {
       setError('Failed to fetch health programs');
-      console.error(err);
+      console.error('Error fetching health programs:', err);
     } finally {
       setLoading(false);
     }

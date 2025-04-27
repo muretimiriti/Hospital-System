@@ -21,7 +21,7 @@ const EnrollClient: React.FC<EnrollClientProps> = ({
   const [programs, setPrograms] = useState<HealthProgram[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
   const [selectedClient, setSelectedClient] = useState<string>(clientId || '');
-  const [selectedPrograms, setSelectedPrograms] = useState<string[]>([]);
+  const [selectedProgram, setSelectedProgram] = useState<string>('');
   const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
   const [endDate, setEndDate] = useState('');
   const [loading, setLoading] = useState(false);
@@ -95,16 +95,17 @@ const EnrollClient: React.FC<EnrollClientProps> = ({
   };
 
   const handleProgramSelect = (programId: string) => {
-    setSelectedPrograms(prev => {
-      if (prev.includes(programId)) {
-        return prev.filter(id => id !== programId);
-      }
-      return [...prev, programId];
-    });
+    if (!programId) return;
+    console.log('Selecting program:', programId);
+    setSelectedProgram(programId);
   };
 
+  useEffect(() => {
+    console.log('Selected program updated:', selectedProgram);
+  }, [selectedProgram]);
+
   const isProgramEnrolled = (programId: string) => {
-    if (!selectedClient) return false;
+    if (!selectedClient || !programId) return false;
     return enrollments.some(enrollment => 
       enrollment.program && 
       enrollment.program.id === programId && 
@@ -133,36 +134,40 @@ const EnrollClient: React.FC<EnrollClientProps> = ({
       return;
     }
 
-    if (selectedPrograms.length === 0) {
-      setError('Please select at least one program');
+    if (!selectedProgram) {
+      setError('Please select a program');
+      setLoading(false);
+      return;
+    }
+
+    if (!selectedClient) {
+      setError('Please select a client');
       setLoading(false);
       return;
     }
 
     try {
-      const enrollmentPromises = selectedPrograms.map(programId => {
-        const enrollmentData: CreateEnrollmentInput = {
-          clientId: selectedClient,
-          programId,
-          startDate: new Date(startDate).toISOString(),
-          endDate: endDate ? new Date(endDate).toISOString() : undefined,
-          status: selectedStatus
-        };
-        return enrollmentService.createEnrollment(enrollmentData);
-      });
-
-      await Promise.all(enrollmentPromises);
-      setSuccess('Successfully enrolled in programs');
+      const enrollmentData: CreateEnrollmentInput = {
+        clientId: selectedClient,
+        programId: selectedProgram,
+        startDate: new Date(startDate).toISOString(),
+        endDate: endDate ? new Date(endDate).toISOString() : undefined,
+        status: selectedStatus
+      };
       
-      if (selectedClient) {
-        fetchClientEnrollments(selectedClient);
-      }
+      await enrollmentService.createEnrollment(enrollmentData);
+      setSuccess('Successfully enrolled in program');
       
-      setTimeout(() => {
-        onEnrollmentComplete();
-      }, 1500);
+      await fetchClientEnrollments(selectedClient);
+      
+      onEnrollmentComplete();
+      
+      setSelectedProgram('');
+      setStartDate(new Date().toISOString().split('T')[0]);
+      setEndDate('');
+      setSelectedStatus(EnrollmentStatus.Active);
     } catch (err: any) {
-      setError(err.message || 'Failed to enroll in programs');
+      setError(err.message || 'Failed to enroll in program');
     } finally {
       setLoading(false);
     }
@@ -278,18 +283,26 @@ const EnrollClient: React.FC<EnrollClientProps> = ({
           </label>
           <div className="space-y-2 max-h-60 overflow-y-auto">
             {programs.map((program) => {
-              const isEnrolled = isProgramEnrolled(program.id);
+              const programId = program.id || program._id;
+              if (!programId) return null;
+              
+              const isEnrolled = isProgramEnrolled(programId);
               return (
-                <div key={program.id} className="flex items-center">
+                <div key={programId} className="flex items-center">
                   <input
-                    type="checkbox"
-                    id={`program-${program.id}`}
-                    checked={selectedPrograms.includes(program.id)}
-                    onChange={() => handleProgramSelect(program.id)}
+                    type="radio"
+                    id={`program-${programId}`}
+                    name="program"
+                    value={programId}
+                    checked={selectedProgram === programId}
+                    onChange={() => handleProgramSelect(programId)}
                     disabled={isEnrolled}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
                   />
-                  <label htmlFor={`program-${program.id}`} className="ml-2 block text-sm text-gray-900">
+                  <label 
+                    htmlFor={`program-${programId}`} 
+                    className="ml-2 block text-sm text-gray-900 cursor-pointer"
+                  >
                     {program.name} - {program.description}
                     {isEnrolled && <span className="text-sm text-gray-500 ml-2">(Already enrolled)</span>}
                   </label>

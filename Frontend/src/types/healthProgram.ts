@@ -1,7 +1,8 @@
 import { EntityId, ISODateString } from './common';
 
 export interface HealthProgram {
-  id: EntityId;
+  id?: EntityId;
+  _id?: EntityId;
   name: string;
   description: string;
   duration: number;

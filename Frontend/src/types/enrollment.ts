@@ -20,8 +20,8 @@ export interface Enrollment {
 
 // Input type for creating a new enrollment
 export interface CreateEnrollmentInput {
-  clientId?: EntityId;
-  programId?: EntityId;
+  clientId: EntityId;
+  programId: EntityId;
   startDate: ISODateString;
   endDate?: ISODateString;
   status?: EnrollmentStatus;

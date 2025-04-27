@@ -83,6 +83,11 @@ export const ClientProfile: React.FC = () => {
     }
   };
 
+  const handleEnrollmentCreated = async () => {
+    setShowEnrollModal(false);
+    await fetchClientData();
+  };
+
   const handleUnenroll = async (enrollmentId: string) => {
     try {
       const response = await fetch(`http://localhost:5000/api/enrollments/${enrollmentId}`, {
@@ -97,7 +102,7 @@ export const ClientProfile: React.FC = () => {
       }
 
       // Refresh client data to show updated enrollments
-      fetchClientData();
+      await fetchClientData();
     } catch (err: any) {
       setError(err.message || 'Failed to unenroll client from program');
     }
@@ -335,10 +340,7 @@ export const ClientProfile: React.FC = () => {
       {showEnrollModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
           <EnrollClient
-            onEnrollmentComplete={() => {
-              setShowEnrollModal(false);
-              fetchClientData();
-            }}
+            onEnrollmentComplete={handleEnrollmentCreated}
             onCancel={() => setShowEnrollModal(false)}
           />
         </div>

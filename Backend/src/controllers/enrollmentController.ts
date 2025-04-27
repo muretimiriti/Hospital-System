@@ -19,6 +19,11 @@ export const createEnrollment = async (req: Request, res: Response) => {
   try {
     const { clientId, programId, startDate, endDate, status, notes } = req.body;
 
+    // Validate required fields
+    if (!clientId || !programId) {
+      return res.status(400).json({ message: 'Client ID and Program ID are required' });
+    }
+
     // Create enrollment data object
     const enrollmentData: Partial<IEnrollment> = { 
       notes,
@@ -27,29 +32,25 @@ export const createEnrollment = async (req: Request, res: Response) => {
       status: status || 'active'
     };
 
-    // Only validate and add client if provided
-    if (clientId) {
-      if (!isValidObjectId(clientId)) {
-        return res.status(400).json({ message: 'Invalid Client ID format' });
-      }
-      const clientExists = await Client.findById(clientId);
-      if (!clientExists) {
-        return res.status(404).json({ message: 'Client not found' });
-      }
-      enrollmentData.client = new Types.ObjectId(clientId);
+    // Validate client ID
+    if (!isValidObjectId(clientId)) {
+      return res.status(400).json({ message: 'Invalid Client ID format' });
     }
+    const clientExists = await Client.findById(clientId);
+    if (!clientExists) {
+      return res.status(404).json({ message: 'Client not found' });
+    }
+    enrollmentData.client = new Types.ObjectId(clientId);
 
-    // Only validate and add program if provided
-    if (programId) {
-      if (!isValidObjectId(programId)) {
-        return res.status(400).json({ message: 'Invalid Program ID format' });
-      }
-      const programExists = await HealthProgram.findById(programId);
-      if (!programExists) {
-        return res.status(404).json({ message: 'Health program not found' });
-      }
-      enrollmentData.program = new Types.ObjectId(programId);
+    // Validate program ID
+    if (!isValidObjectId(programId)) {
+      return res.status(400).json({ message: 'Invalid Program ID format' });
     }
+    const programExists = await HealthProgram.findById(programId);
+    if (!programExists) {
+      return res.status(404).json({ message: 'Health program not found' });
+    }
+    enrollmentData.program = new Types.ObjectId(programId);
 
     // Create and save the new enrollment
     const newEnrollment = new Enrollment(enrollmentData);

@@ -76,15 +76,30 @@ export const EnrollmentsPage: React.FC = () => {
   const filteredEnrollments = enrollments?.filter(enrollment => {
     if (!enrollment) return false;
     
+    // Search query - case insensitive
+    const searchLower = searchQuery.toLowerCase();
     const matchesSearch = searchQuery === '' || 
-      enrollment.client?.firstName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      enrollment.client?.lastName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      enrollment.program?.name?.toLowerCase().includes(searchQuery.toLowerCase());
+      (enrollment.client?.firstName?.toLowerCase().includes(searchLower) ||
+      enrollment.client?.lastName?.toLowerCase().includes(searchLower) ||
+      enrollment.program?.name?.toLowerCase().includes(searchLower) ||
+      enrollment.program?.description?.toLowerCase().includes(searchLower));
 
+    // Status filter
     const matchesStatus = filters.status === 'all' || enrollment.status === filters.status;
-    const matchesProgram = filters.program === 'all' || enrollment.program?.id === filters.program;
-    const matchesDateRange = (!filters.startDate || new Date(enrollment.startDate) >= new Date(filters.startDate)) &&
-      (!filters.endDate || new Date(enrollment.startDate) <= new Date(filters.endDate));
+
+    // Program filter - handle both id and _id
+    const matchesProgram = filters.program === 'all' || 
+      enrollment.program?.id === filters.program || 
+      enrollment.program?._id === filters.program;
+
+    // Date range filter
+    const enrollmentStartDate = new Date(enrollment.startDate);
+    const filterStartDate = filters.startDate ? new Date(filters.startDate) : null;
+    const filterEndDate = filters.endDate ? new Date(filters.endDate) : null;
+
+    const matchesDateRange = 
+      (!filterStartDate || enrollmentStartDate >= filterStartDate) &&
+      (!filterEndDate || enrollmentStartDate <= filterEndDate);
 
     return matchesSearch && matchesStatus && matchesProgram && matchesDateRange;
   }) || [];
@@ -100,6 +115,11 @@ export const EnrollmentsPage: React.FC = () => {
     setSelectedClient(clientId);
     setShowClientSelectModal(false);
     setShowEnrollModal(true);
+  };
+
+  const handleEnrollmentComplete = async () => {
+    setShowEnrollModal(false);
+    await fetchData();
   };
 
   if (loading) {
@@ -153,7 +173,7 @@ export const EnrollmentsPage: React.FC = () => {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search by name or program..."
+                placeholder="Search by name, program, or description..."
                 className="w-full p-2 pl-10 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
               />
               <FaSearch className="absolute left-3 top-3 text-gray-400" />
@@ -183,12 +203,16 @@ export const EnrollmentsPage: React.FC = () => {
               onChange={handleFilterChange}
               className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
             >
-              <option key="all" value="all">All Programs</option>
-              {programs.map(program => (
-                <option key={program.id} value={program.id}>
-                  {program.name}
-                </option>
-              ))}
+              <option value="all">All Programs</option>
+              {programs.map(program => {
+                const programId = program.id || program._id;
+                if (!programId) return null;
+                return (
+                  <option key={programId} value={programId}>
+                    {program.name}
+                  </option>
+                );
+              })}
             </select>
           </div>
 
@@ -201,6 +225,7 @@ export const EnrollmentsPage: React.FC = () => {
                   name="startDate"
                   value={filters.startDate}
                   onChange={handleFilterChange}
+                  max={filters.endDate || undefined}
                   className="w-full p-2 pl-10 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                 />
                 <FaCalendarAlt className="absolute left-3 top-3 text-gray-400" />
@@ -211,6 +236,7 @@ export const EnrollmentsPage: React.FC = () => {
                   name="endDate"
                   value={filters.endDate}
                   onChange={handleFilterChange}
+                  min={filters.startDate || undefined}
                   className="w-full p-2 pl-10 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                 />
                 <FaCalendarAlt className="absolute left-3 top-3 text-gray-400" />
@@ -239,55 +265,65 @@ export const EnrollmentsPage: React.FC = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {filteredEnrollments.map((enrollment) => (
-                <motion.tr
-                  key={enrollment.id}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="hover:bg-gray-50"
-                >
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {enrollment.client?.firstName} {enrollment.client?.lastName}
+              {filteredEnrollments.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
+                    No enrollments found matching your search criteria
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{enrollment.program.name}</div>
-                    <div className="text-sm text-gray-500">{enrollment.program.description}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full
-                      ${enrollment.status === 'active' ? 'bg-green-100 text-green-800' :
-                        enrollment.status === 'completed' ? 'bg-blue-100 text-blue-800' :
-                        'bg-red-100 text-red-800'}`}>
-                      {enrollment.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {new Date(enrollment.startDate).toLocaleDateString()}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {enrollment.endDate ? new Date(enrollment.endDate).toLocaleDateString() : '-'}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <button
-                      onClick={() => {
-                        setSelectedClient(enrollment.client.id);
-                        setShowEnrollModal(true);
-                      }}
-                      className="text-blue-600 hover:text-blue-900 mr-4"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => {
-                        // Handle unenrollment
-                      }}
-                      className="text-red-600 hover:text-red-900"
-                    >
-                      Unenroll
-                    </button>
-                  </td>
-                </motion.tr>
-              ))}
+                </tr>
+              ) : (
+                filteredEnrollments.map((enrollment) => (
+                  <motion.tr
+                    key={enrollment.id}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="hover:bg-gray-50"
+                  >
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {enrollment.client?.firstName} {enrollment.client?.lastName}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">{enrollment.program.name}</div>
+                      <div className="text-sm text-gray-500">{enrollment.program.description}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full
+                        ${enrollment.status === 'active' ? 'bg-green-100 text-green-800' :
+                          enrollment.status === 'completed' ? 'bg-blue-100 text-blue-800' :
+                          'bg-red-100 text-red-800'}`}>
+                        {enrollment.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {new Date(enrollment.startDate).toLocaleDateString()}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {enrollment.endDate ? new Date(enrollment.endDate).toLocaleDateString() : '-'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <button
+                        onClick={() => {
+                          if (enrollment.client?.id) {
+                            setSelectedClient(enrollment.client.id);
+                            setShowEnrollModal(true);
+                          }
+                        }}
+                        className="text-blue-600 hover:text-blue-900 mr-4"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => {
+                          // Handle unenrollment
+                        }}
+                        className="text-red-600 hover:text-red-900"
+                      >
+                        Unenroll
+                      </button>
+                    </td>
+                  </motion.tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
@@ -374,10 +410,7 @@ export const EnrollmentsPage: React.FC = () => {
       {showEnrollModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
           <EnrollClient
-            onEnrollmentComplete={() => {
-              setShowEnrollModal(false);
-              fetchData();
-            }}
+            onEnrollmentComplete={handleEnrollmentComplete}
             onCancel={() => setShowEnrollModal(false)}
           />
         </div>
