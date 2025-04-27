@@ -1,12 +1,16 @@
 import request from 'supertest';
 import mongoose from 'mongoose';
-import { app } from '../../server';
+import app from '../../server';
 import User from '../../models/User';
 import { generateToken } from '../../utils/jwtUtils';
 
 describe('Auth Controller Tests', () => {
   beforeEach(async () => {
     await User.deleteMany({});
+  });
+
+  afterAll(async () => {
+    await mongoose.connection.close();
   });
 
   describe('POST /api/auth/register', () => {
@@ -113,14 +117,14 @@ describe('Auth Controller Tests', () => {
         password: 'password123',
       });
 
-      const token = generateToken(user._id.toString());
+      const token = generateToken((user._id as mongoose.Types.ObjectId).toString());
 
       const res = await request(app)
         .get('/api/auth/me')
         .set('Authorization', `Bearer ${token}`);
 
       expect(res.status).toBe(200);
-      expect(res.body).toHaveProperty('_id', user._id.toString());
+      expect(res.body).toHaveProperty('_id', (user._id as mongoose.Types.ObjectId).toString());
       expect(res.body).toHaveProperty('email', 'test@example.com');
       expect(res.body).not.toHaveProperty('password');
     });

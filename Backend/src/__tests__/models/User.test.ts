@@ -11,7 +11,19 @@ describe('User Model Test', () => {
     
     expect(savedUser._id).toBeDefined();
     expect(savedUser.email).toBe(validUser.email);
-    expect(savedUser.password).toBeUndefined(); // Password should not be returned
+    
+    // When creating a new user, the password will be present but hashed
+    expect(savedUser.password).toBeDefined();
+    expect(savedUser.password).not.toBe('password123'); // Should be hashed
+    
+    // When fetching the user, password should not be returned by default
+    const fetchedUser = await User.findById(savedUser._id);
+    expect(fetchedUser?.password).toBeUndefined();
+    
+    // Verify password is hashed when explicitly selected
+    const userWithPassword = await User.findById(savedUser._id).select('+password');
+    expect(userWithPassword?.password).toBeDefined();
+    expect(userWithPassword?.password).not.toBe('password123'); // Should be hashed
   });
 
   it('should fail to save user without required fields', async () => {

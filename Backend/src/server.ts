@@ -47,6 +47,9 @@ app.use('/api/audit-logs', auditLogRoutes); // Add audit log routes
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => console.log(`Server started on port ${PORT}, Docs at http://localhost:${PORT}/api-docs`));
+// Only start the server if this file is being run directly
+if (require.main === module) {
+  app.listen(PORT, () => console.log(`Server started on port ${PORT}, Docs at http://localhost:${PORT}/api-docs`));
+}
 
 export default app; // Export for potential testing 
