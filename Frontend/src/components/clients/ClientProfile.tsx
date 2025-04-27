@@ -1,31 +1,56 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { FaUser, FaEnvelope, FaPhone, FaAddressCard, FaCalendarAlt, FaVenusMars, FaPlus, FaTrash } from 'react-icons/fa';
+import { FaUser, FaEnvelope, FaPhone, FaAddressCard, FaCalendarAlt, FaVenusMars, FaPlus, FaTrash, FaSearch } from 'react-icons/fa';
 import { Client } from '../../types/client';
-import { HealthProgram } from '../../types/healthProgram';
 import { EnrollmentWithDetails } from '../../types/enrollment';
+import { EnrollClient } from '../enrollments/EnrollClient';
+import { useParams } from 'react-router-dom';
 
 interface ClientProfileProps {
-  clientId: string;
   onBack: () => void;
 }
 
-export const ClientProfile: React.FC<ClientProfileProps> = ({ clientId, onBack }) => {
+export const ClientProfile: React.FC<ClientProfileProps> = ({ onBack }) => {
+  const { clientId } = useParams<{ clientId: string }>();
+  console.log('ClientProfile rendered with clientId from URL:', clientId);
+
   const [client, setClient] = useState<Client | null>(null);
-  const [programs, setPrograms] = useState<HealthProgram[]>([]);
+  const [clients, setClients] = useState<Client[]>([]);
   const [enrollments, setEnrollments] = useState<EnrollmentWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showEnrollModal, setShowEnrollModal] = useState(false);
-  const [selectedProgram, setSelectedProgram] = useState<string>('');
+  const [showClientSelectModal, setShowClientSelectModal] = useState(false);
+  const [clientSearchQuery, setClientSearchQuery] = useState('');
+  const [filteredClients, setFilteredClients] = useState<Client[]>([]);
 
   useEffect(() => {
-    fetchClientData();
-    fetchPrograms();
+    if (clientId) {
+      console.log('Fetching data for client:', clientId);
+      fetchClientData();
+      fetchClients();
+    } else {
+      console.error('No client ID in URL params');
+    }
   }, [clientId]);
+
+  useEffect(() => {
+    if (clientSearchQuery.trim() === '') {
+      setFilteredClients([]);
+      return;
+    }
+
+    const filtered = clients.filter(client => 
+      client.firstName.toLowerCase().includes(clientSearchQuery.toLowerCase()) ||
+      client.lastName.toLowerCase().includes(clientSearchQuery.toLowerCase()) ||
+      client.email.toLowerCase().includes(clientSearchQuery.toLowerCase())
+    );
+    setFilteredClients(filtered);
+  }, [clientSearchQuery, clients]);
 
   const fetchClientData = async () => {
     try {
+      console.log('Fetching client data for ID:', clientId);
       const response = await fetch(`http://localhost:5000/api/clients/${clientId}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -37,62 +62,33 @@ export const ClientProfile: React.FC<ClientProfileProps> = ({ clientId, onBack }
       }
 
       const data = await response.json();
+      console.log('Fetched client data:', data.data);
       setClient(data.data);
       setEnrollments(data.data.enrollments || []);
     } catch (err: any) {
+      console.error('Error fetching client data:', err);
       setError(err.message || 'Failed to load client data');
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchPrograms = async () => {
+  const fetchClients = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/health-programs', {
+      const response = await fetch('http://localhost:5000/api/clients', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
       });
 
       if (!response.ok) {
-        throw new Error('Failed to fetch programs');
+        throw new Error('Failed to fetch clients');
       }
 
       const data = await response.json();
-      setPrograms(data.data);
+      setClients(data.data || []);
     } catch (err: any) {
-      setError(err.message || 'Failed to load programs');
-    }
-  };
-
-  const handleEnroll = async () => {
-    if (!selectedProgram) return;
-
-    try {
-      const response = await fetch('http://localhost:5000/api/enrollments', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({
-          clientId,
-          programId: selectedProgram,
-          status: 'active',
-          startDate: new Date().toISOString()
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to enroll client in program');
-      }
-
-      // Refresh client data to show new enrollment
-      fetchClientData();
-      setShowEnrollModal(false);
-      setSelectedProgram('');
-    } catch (err: any) {
-      setError(err.message || 'Failed to enroll client in program');
+      setError(err.message || 'Failed to load clients');
     }
   };
 
@@ -114,6 +110,17 @@ export const ClientProfile: React.FC<ClientProfileProps> = ({ clientId, onBack }
     } catch (err: any) {
       setError(err.message || 'Failed to unenroll client from program');
     }
+  };
+
+  const handleClientSelect = (clientId: string) => {
+    console.log('Selected client ID:', clientId); // Debug log
+    setShowClientSelectModal(false);
+    setShowEnrollModal(true);
+  };
+
+  const handleEnrollClick = () => {
+    console.log('Opening enrollment modal for client:', clientId);
+    setShowEnrollModal(true);
   };
 
   if (loading) {
@@ -201,7 +208,7 @@ export const ClientProfile: React.FC<ClientProfileProps> = ({ clientId, onBack }
                 <FaVenusMars className="text-gray-400 mr-3" />
                 <div>
                   <p className="text-sm text-gray-500">Gender</p>
-                  <p className="font-medium">{client.gender}</p>
+                  <p className="font-medium capitalize">{client.gender}</p>
                 </div>
               </div>
             </div>
@@ -209,15 +216,15 @@ export const ClientProfile: React.FC<ClientProfileProps> = ({ clientId, onBack }
         </div>
       </div>
 
-      {/* Enrollments */}
+      {/* Program Enrollments */}
       <div className="bg-white rounded-lg shadow-md p-6">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold">Program Enrollments</h2>
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            onClick={() => setShowEnrollModal(true)}
-            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 flex items-center"
+            onClick={handleEnrollClick}
+            className="flex items-center px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
           >
             <FaPlus className="mr-2" />
             Enroll in Program
@@ -225,75 +232,119 @@ export const ClientProfile: React.FC<ClientProfileProps> = ({ clientId, onBack }
         </div>
 
         {enrollments.length === 0 ? (
-          <p className="text-gray-500">No program enrollments yet.</p>
+          <p className="text-gray-500">No program enrollments</p>
         ) : (
           <div className="space-y-4">
             {enrollments.map((enrollment) => (
-              <div key={enrollment.id} className="border rounded-lg p-4">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="font-medium">{enrollment.program.name}</h3>
-                    <p className="text-sm text-gray-600 mt-1">{enrollment.program.description}</p>
-                    <div className="mt-2 space-y-1">
-                      <p className="text-sm text-gray-500">
-                        Status: <span className="capitalize">{enrollment.status}</span>
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        Enrolled on: {new Date(enrollment.enrollmentDate).toLocaleDateString()}
-                      </p>
-                      {enrollment.completionDate && (
-                        <p className="text-sm text-gray-500">
-                          Completed on: {new Date(enrollment.completionDate).toLocaleDateString()}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => handleUnenroll(enrollment.id)}
-                    className="text-red-500 hover:text-red-600"
-                  >
-                    <FaTrash />
-                  </button>
+              <div key={enrollment.id} className="flex justify-between items-center p-4 bg-gray-50 rounded-md">
+                <div>
+                  <h3 className="font-medium">{enrollment.program.name}</h3>
+                  <p className="text-sm text-gray-500">{enrollment.program.description}</p>
+                  <p className="text-xs text-gray-400">
+                    Status: <span className="capitalize">{enrollment.status}</span>
+                  </p>
                 </div>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => handleUnenroll(enrollment.id)}
+                  className="text-red-500 hover:text-red-600"
+                >
+                  <FaTrash />
+                </motion.button>
               </div>
             ))}
           </div>
         )}
       </div>
 
-      {/* Enrollment Modal */}
-      {showEnrollModal && (
+      {/* Client Selection Modal */}
+      {showClientSelectModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full">
-            <h3 className="text-xl font-semibold mb-4">Enroll in Program</h3>
-            <select
-              value={selectedProgram}
-              onChange={(e) => setSelectedProgram(e.target.value)}
-              className="w-full p-2 border border-gray-300 rounded-md mb-4"
-            >
-              <option value="">Select a program</option>
-              {programs.map((program) => (
-                <option key={program.id} value={program.id}>
-                  {program.name} - ${program.cost}
-                </option>
-              ))}
-            </select>
-            <div className="flex justify-end space-x-2">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-lg shadow-lg p-6 max-w-2xl w-full"
+          >
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold text-gray-800">Select Client</h2>
               <button
-                onClick={() => setShowEnrollModal(false)}
-                className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                onClick={() => setShowClientSelectModal(false)}
+                className="text-gray-500 hover:text-gray-700"
               >
                 Cancel
               </button>
-              <button
-                onClick={handleEnroll}
-                disabled={!selectedProgram}
-                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
-              >
-                Enroll
-              </button>
             </div>
-          </div>
+
+            <div className="mb-4">
+              <div className="relative">
+                <input
+                  type="text"
+                  value={clientSearchQuery}
+                  onChange={(e) => setClientSearchQuery(e.target.value)}
+                  placeholder="Search clients..."
+                  className="w-full p-2 pl-10 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                />
+                <FaSearch className="absolute left-3 top-3 text-gray-400" />
+              </div>
+            </div>
+
+            <div className="max-h-96 overflow-y-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {filteredClients.map((client) => (
+                    <motion.tr
+                      key={client.id}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="hover:bg-gray-50"
+                    >
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">
+                          {client.firstName} {client.lastName}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {client.email}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {client.contactNumber}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button
+                          onClick={() => handleClientSelect(client.id)}
+                          className="text-blue-600 hover:text-blue-900"
+                        >
+                          Select
+                        </button>
+                      </td>
+                    </motion.tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Enroll Client Modal */}
+      {showEnrollModal && clientId && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+          <EnrollClient
+            onEnrollmentComplete={() => {
+              setShowEnrollModal(false);
+              fetchClientData();
+            }}
+            onCancel={() => setShowEnrollModal(false)}
+          />
         </div>
       )}
     </div>

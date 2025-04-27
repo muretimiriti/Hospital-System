@@ -13,29 +13,45 @@ export const createEnrollment = async (req: Request, res: Response) => {
   try {
     const { clientId, programId, notes } = req.body;
 
-    // Validate IDs
-    if (!isValidObjectId(clientId) || !isValidObjectId(programId)) {
-      return res.status(400).json({ message: 'Invalid Client or Program ID format' });
+    // Create enrollment data object
+    const enrollmentData: any = { notes };
+
+    // Only validate and add client if provided
+    if (clientId) {
+      if (!isValidObjectId(clientId)) {
+        return res.status(400).json({ message: 'Invalid Client ID format' });
+      }
+      const clientExists = await Client.findById(clientId);
+      if (!clientExists) {
+        return res.status(404).json({ message: 'Client not found' });
+      }
+      enrollmentData.client = clientId;
     }
 
-    // Check if client and program exist
-    const clientExists = await Client.findById(clientId);
-    const programExists = await HealthProgram.findById(programId);
-
-    if (!clientExists) {
-      return res.status(404).json({ message: 'Client not found' });
-    }
-    if (!programExists) {
-      return res.status(404).json({ message: 'Health program not found' });
+    // Only validate and add program if provided
+    if (programId) {
+      if (!isValidObjectId(programId)) {
+        return res.status(400).json({ message: 'Invalid Program ID format' });
+      }
+      const programExists = await HealthProgram.findById(programId);
+      if (!programExists) {
+        return res.status(404).json({ message: 'Health program not found' });
+      }
+      enrollmentData.program = programId;
     }
 
     // Create and save the new enrollment
-    const newEnrollment = new Enrollment({ client: clientId, program: programId, notes });
+    const newEnrollment = new Enrollment(enrollmentData);
     await newEnrollment.save();
 
-    // Add enrollment reference to the client document
-    clientExists.enrolledPrograms.push(newEnrollment._id! as Types.ObjectId);
-    await clientExists.save();
+    // Add enrollment reference to the client document if client exists
+    if (clientId) {
+      const clientExists = await Client.findById(clientId);
+      if (clientExists) {
+        clientExists.enrolledPrograms.push(newEnrollment._id! as Types.ObjectId);
+        await clientExists.save();
+      }
+    }
 
     res.status(201).json(newEnrollment);
   } catch (error: any) {

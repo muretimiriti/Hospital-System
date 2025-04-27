@@ -4,7 +4,6 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { HealthPrograms } from './components/health-programs/HealthPrograms';
 import Clients from './components/clients/Clients';
 import { ClientProfile } from './components/clients/ClientProfile';
-import { SelectClientForEnrollment } from './components/enrollments/SelectClientForEnrollment';
 import Dashboard from './components/Dashboard';
 import AuditLogs from './components/AuditLogs';
 import Navigation from './components/common/Navigation';
@@ -12,6 +11,7 @@ import Login from './components/auth/Login';
 import Register from './components/auth/Register';
 import { NotificationProvider } from './contexts/NotificationContext';
 import { theme } from './styles/theme';
+import { EnrollmentsPage } from './components/enrollments/EnrollmentsPage';
 
 // Protected Route component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -79,14 +79,14 @@ function App() {
                   <AuditLogs />
                 </ProtectedRoute>
               } />
+              <Route path="/enrollments" element={
+                <ProtectedRoute>
+                  <EnrollmentsPage />
+                </ProtectedRoute>
+              } />
               <Route path="/clients" element={
                 <ProtectedRoute>
                   <Clients onClientSelect={handleClientSelect} />
-                </ProtectedRoute>
-              } />
-              <Route path="/clients/enroll" element={
-                <ProtectedRoute>
-                  <SelectClientForEnrollment />
                 </ProtectedRoute>
               } />
               <Route path="/clients/:clientId" element={

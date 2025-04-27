@@ -3,6 +3,8 @@ import { Client } from '../../types/client';
 import { clientService } from '../../services/clientService';
 import { ClientProfile } from './ClientProfile';
 import { EnrollmentForm } from '../enrollments/EnrollmentForm';
+import { motion } from 'framer-motion';
+import { FaUser, FaEnvelope, FaPhone, FaSearch, FaTrash } from 'react-icons/fa';
 
 interface ClientListProps {
   onClientSelect: (clientId: string) => void;
@@ -101,12 +103,28 @@ export const ClientList: React.FC<ClientListProps> = ({ onClientSelect }) => {
     }
   };
 
+  const filteredClients = clients.filter(client => 
+    searchQuery === '' ||
+    client.firstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    client.lastName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    client.email.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   if (loading) {
-    return <div className="flex justify-center items-center h-64">Loading...</div>;
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+      </div>
+    );
   }
 
   if (error) {
-    return <div className="text-red-500 text-center">{error}</div>;
+    return (
+      <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+        <strong className="font-bold">Error!</strong>
+        <span className="block sm:inline"> {error}</span>
+      </div>
+    );
   }
 
   // Show client profile if a client is selected
@@ -141,86 +159,97 @@ export const ClientList: React.FC<ClientListProps> = ({ onClientSelect }) => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      {/* Search form */}
-      <div className="bg-white shadow rounded-lg p-6 mb-8">
-        <h2 className="text-xl font-bold mb-4">Search Clients</h2>
-        <div className="space-y-4">
-          <div className="flex gap-4">
-            <div className="flex-1">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search clients..."
-                className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              />
-            </div>
-            <div className="w-48">
-              <select
-                value={searchType}
-                onChange={(e) => setSearchType(e.target.value as any)}
-                className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              >
-                <option value="all">All Fields</option>
-                <option value="name">Name</option>
-                <option value="email">Email</option>
-                <option value="contact">Contact Number</option>
-              </select>
-            </div>
-          </div>
-          <div className="text-sm text-gray-500">
-            {clients.length} clients found
-          </div>
-        </div>
-      </div>
+    <div className="p-6">
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="mb-8 flex justify-between items-center"
+      >
+        <h1 className="text-3xl font-bold text-gray-800 flex items-center">
+          <FaUser className="mr-3" />
+          Clients
+        </h1>
+      </motion.div>
 
-      {/* Client list */}
-      <div className="grid gap-4">
-        {clients.map((client) => (
-          <div
-            key={client.id}
-            className="bg-white shadow rounded-lg p-6 hover:shadow-lg transition-shadow"
-          >
-            <div className="flex justify-between items-start">
-              <div>
-                <h3 className="text-xl font-semibold">
-                  {client.firstName} {client.lastName}
-                </h3>
-                <p className="text-gray-600 mt-2">
-                  DOB: {new Date(client.dateOfBirth).toLocaleDateString()}
-                </p>
-                <p className="text-gray-600">Gender: {client.gender}</p>
-                <p className="text-gray-600">Contact: {client.contactNumber}</p>
-                <p className="text-gray-600">Email: {client.email}</p>
-                <p className="text-gray-600">Address: {client.address}</p>
-                <p className="text-sm text-gray-500 mt-2">
-                  Enrolled Programs: {client.enrolledPrograms.length}
-                </p>
-              </div>
-              <div className="flex space-x-2">
-                <button
-                  onClick={() => onClientSelect(client.id)}
-                  className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 transition-colors"
+      {/* Search Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-white rounded-lg shadow-lg p-6 mb-8"
+      >
+        <div className="relative">
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search clients..."
+            className="w-full p-2 pl-10 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+          />
+          <FaSearch className="absolute left-3 top-3 text-gray-400" />
+        </div>
+      </motion.div>
+
+      {/* Clients Table */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-white rounded-lg shadow-lg overflow-hidden"
+      >
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Programs</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {filteredClients.map((client) => (
+                <motion.tr
+                  key={client.id}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="hover:bg-gray-50"
                 >
-                  View Profile
-                </button>
-                <button
-                  onClick={() => handleDelete(client.id)}
-                  className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition-colors"
-                >
-                  Delete
-                </button>
-              </div>
-            </div>
-          </div>
-        ))}
-        {clients.length === 0 && (
-          <div className="text-center text-gray-500 py-8">
-            No clients found matching your search criteria
-          </div>
-        )}
-      </div>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm font-medium text-gray-900">
+                      {client.firstName} {client.lastName}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {client.email}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {client.contactNumber}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                      {client.enrolledPrograms?.length || 0} Programs
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <button
+                      onClick={() => onClientSelect(client.id)}
+                      className="text-blue-600 hover:text-blue-900 mr-4"
+                    >
+                      View
+                    </button>
+                    <button
+                      onClick={() => handleDelete(client.id)}
+                      className="text-red-600 hover:text-red-900"
+                    >
+                      Delete
+                    </button>
+                  </td>
+                </motion.tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </motion.div>
     </div>
   );
 }; 

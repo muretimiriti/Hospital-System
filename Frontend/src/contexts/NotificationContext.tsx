@@ -1,47 +1,47 @@
-import React, { createContext, useContext, useState } from 'react';
-
-type NotificationType = 'success' | 'error' | 'info' | 'warning';
-
-interface Notification {
-  message: string;
-  type: NotificationType;
-}
+import React, { createContext, useContext, useState, useCallback } from 'react';
+import { Notification, NotificationType } from '../components/common/Notification';
 
 interface NotificationContextType {
-  notification: Notification | null;
-  showNotification: (notification: Notification) => void;
-  hideNotification: () => void;
+  showNotification: (type: NotificationType, message: string) => void;
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
 
 export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [notification, setNotification] = useState<Notification | null>(null);
+  const [notification, setNotification] = useState<{
+    type: NotificationType;
+    message: string;
+    isVisible: boolean;
+  }>({
+    type: 'info',
+    message: '',
+    isVisible: false,
+  });
 
-  const showNotification = (notification: Notification) => {
-    setNotification(notification);
-    setTimeout(() => {
-      hideNotification();
-    }, 5000);
-  };
+  const showNotification = useCallback((type: NotificationType, message: string) => {
+    setNotification({
+      type,
+      message,
+      isVisible: true,
+    });
+  }, []);
 
-  const hideNotification = () => {
-    setNotification(null);
-  };
+  const hideNotification = useCallback(() => {
+    setNotification(prev => ({
+      ...prev,
+      isVisible: false,
+    }));
+  }, []);
 
   return (
-    <NotificationContext.Provider value={{ notification, showNotification, hideNotification }}>
+    <NotificationContext.Provider value={{ showNotification }}>
       {children}
-      {notification && (
-        <div className={`fixed bottom-4 right-4 p-4 rounded-lg shadow-lg ${
-          notification.type === 'success' ? 'bg-green-500' :
-          notification.type === 'error' ? 'bg-red-500' :
-          notification.type === 'warning' ? 'bg-yellow-500' :
-          'bg-blue-500'
-        } text-white`}>
-          {notification.message}
-        </div>
-      )}
+      <Notification
+        type={notification.type}
+        message={notification.message}
+        isVisible={notification.isVisible}
+        onClose={hideNotification}
+      />
     </NotificationContext.Provider>
   );
 };

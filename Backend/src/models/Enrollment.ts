@@ -15,12 +15,12 @@ const EnrollmentSchema: Schema = new Schema(
     client: {
       type: Schema.Types.ObjectId,
       ref: 'Client',
-      required: [true, 'Client reference is required'],
+      required: false,
     },
     program: {
       type: Schema.Types.ObjectId,
       ref: 'HealthProgram',
-      required: [true, 'Program reference is required'],
+      required: false,
     },
     enrollmentDate: {
       type: Date,

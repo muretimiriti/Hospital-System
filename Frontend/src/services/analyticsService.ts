@@ -28,6 +28,11 @@ interface DashboardStats {
 
 export const getDashboardStats = async (): Promise<ApiResponse<DashboardStats>> => {
   try {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
     const response = await fetch(`${API_CONFIG.baseUrl}/analytics/dashboard`, {
       headers: {
         ...API_CONFIG.headers,
@@ -35,8 +40,16 @@ export const getDashboardStats = async (): Promise<ApiResponse<DashboardStats>> 
       },
     });
 
+    if (response.status === 403) {
+      // Token might be expired or invalid
+      localStorage.removeItem('token');
+      window.location.href = '/login';
+      throw new Error('Session expired. Please login again.');
+    }
+
     if (!response.ok) {
-      throw new Error('Failed to fetch dashboard stats');
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to fetch dashboard stats');
     }
 
     return await response.json();

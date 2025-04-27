@@ -1,42 +1,32 @@
-import { API_CONFIG, getAuthHeader } from '../config/api';
-import { ApiResponse, Gender } from '../types/common';
 import { Client, CreateClientInput, UpdateClientInput, ClientWithPrograms } from '../types/client';
 
 const API_URL = 'http://localhost:3000/api'; // Update this with your actual API URL
 
-export interface Client {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  dateOfBirth: string;
-  address: string;
-  gender: Gender;
-  contactNumber: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface CreateClientInput {
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  dateOfBirth: string;
-  address: string;
-  gender: Gender;
-  contactNumber: string;
-}
-
 export const clientService = {
-  // Create a new client
-  async createClient(client: CreateClientInput): Promise<ApiResponse<Client>> {
-    const response = await fetch(`${API_CONFIG.baseUrl}/clients`, {
+  // Fetch all registered clients
+  async getAllClients(): Promise<Client[]> {
+    const response = await fetch(`${API_URL}/clients`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch clients');
+    }
+    return response.json();
+  },
+
+  // Fetch a single client with their enrolled program details
+  async getClientById(id: string): Promise<ClientWithPrograms> {
+    const response = await fetch(`${API_URL}/clients/${id}`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch client');
+    }
+    return response.json();
+  },
+
+  // Register a new client in the system
+  async createClient(client: CreateClientInput): Promise<Client> {
+    const response = await fetch(`${API_URL}/clients`, {
       method: 'POST',
       headers: {
-        ...API_CONFIG.headers,
-        ...getAuthHeader(),
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify(client),
     });
@@ -46,41 +36,12 @@ export const clientService = {
     return response.json();
   },
 
-  // Get all clients
-  async getAllClients(): Promise<ApiResponse<Client[]>> {
-    const response = await fetch(`${API_CONFIG.baseUrl}/clients`, {
-      headers: {
-        ...API_CONFIG.headers,
-        ...getAuthHeader(),
-      },
-    });
-    if (!response.ok) {
-      throw new Error('Failed to fetch clients');
-    }
-    return response.json();
-  },
-
-  // Get a single client by ID
-  async getClientById(id: string): Promise<ApiResponse<Client>> {
-    const response = await fetch(`${API_CONFIG.baseUrl}/clients/${id}`, {
-      headers: {
-        ...API_CONFIG.headers,
-        ...getAuthHeader(),
-      },
-    });
-    if (!response.ok) {
-      throw new Error('Failed to fetch client');
-    }
-    return response.json();
-  },
-
-  // Update a client
-  async updateClient(id: string, client: Partial<CreateClientInput>): Promise<ApiResponse<Client>> {
-    const response = await fetch(`${API_CONFIG.baseUrl}/clients/${id}`, {
+  // Update an existing client's information
+  async updateClient(id: string, client: UpdateClientInput): Promise<Client> {
+    const response = await fetch(`${API_URL}/clients/${id}`, {
       method: 'PUT',
       headers: {
-        ...API_CONFIG.headers,
-        ...getAuthHeader(),
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify(client),
     });
@@ -90,14 +51,10 @@ export const clientService = {
     return response.json();
   },
 
-  // Delete a client
+  // Remove a client from the system
   async deleteClient(id: string): Promise<void> {
-    const response = await fetch(`${API_CONFIG.baseUrl}/clients/${id}`, {
+    const response = await fetch(`${API_URL}/clients/${id}`, {
       method: 'DELETE',
-      headers: {
-        ...API_CONFIG.headers,
-        ...getAuthHeader(),
-      },
     });
     if (!response.ok) {
       throw new Error('Failed to delete client');
