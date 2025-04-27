@@ -16,6 +16,7 @@ export const EnrollmentForm: React.FC<EnrollmentFormProps> = ({ clientId, onEnro
   const [formData, setFormData] = useState<CreateEnrollmentInput>({
     clientId,
     programId: '',
+    startDate: '',
     notes: '',
   });
   const [programs, setPrograms] = useState<HealthProgram[]>([]);
@@ -30,7 +31,7 @@ export const EnrollmentForm: React.FC<EnrollmentFormProps> = ({ clientId, onEnro
     const fetchPrograms = async () => {
       try {
         const data = await healthProgramService.getAllPrograms();
-        setPrograms(data);
+        setPrograms(data.data);
       } catch (err) {
         setError('Failed to fetch programs');
         console.error(err);
@@ -67,7 +68,7 @@ export const EnrollmentForm: React.FC<EnrollmentFormProps> = ({ clientId, onEnro
   const handleProgramSelect = (program: HealthProgram) => {
     setFormData(prev => ({
       ...prev,
-      programId: program.id,
+      programId: program.id || '',
     }));
   };
 
@@ -105,6 +106,7 @@ export const EnrollmentForm: React.FC<EnrollmentFormProps> = ({ clientId, onEnro
       setFormData({
         clientId,
         programId: '',
+        startDate: '',
         notes: '',
       });
       setValidationErrors([]);

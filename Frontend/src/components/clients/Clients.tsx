@@ -1,7 +1,7 @@
 // Import required dependencies from React
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { FaUserPlus, FaSearch, FaPlus, FaUser } from 'react-icons/fa';
+import { FaSearch, FaPlus } from 'react-icons/fa';
 import { Client } from '../../types/client';
 import Pagination from '../common/Pagination';
 import SortSelect from '../common/SortSelect';

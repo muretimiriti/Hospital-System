@@ -8,7 +8,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { clientService } from '../../services/clientService';
 import { formatDate } from '../../utils/dateUtils';
 
-export const ClientProfile: React.FC = () => {
+export const ClientProfile: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
   const { clientId } = useParams<{ clientId: string }>();
   const navigate = useNavigate();
   console.log('ClientProfile rendered with clientId from URL:', clientId);
@@ -120,7 +120,11 @@ export const ClientProfile: React.FC = () => {
   };
 
   const handleBack = () => {
-    navigate('/clients');
+    if (onBack) {
+      onBack();
+    } else {
+      navigate('/clients');
+    }
   };
 
   if (loading) {

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { CreateClientInput } from '../../types/client';
 import { clientService } from '../../services/clientService';
+import { Gender } from '../../types/common';
 
 interface CreateClientProps {
   onClientCreated: () => void;
@@ -12,7 +13,7 @@ export const CreateClient: React.FC<CreateClientProps> = ({ onClientCreated }) =
     firstName: '',
     lastName: '',
     dateOfBirth: '',
-    gender: 'male',
+    gender: Gender.Male,
     contactNumber: '',
     email: '',
     address: '',
@@ -44,7 +45,7 @@ export const CreateClient: React.FC<CreateClientProps> = ({ onClientCreated }) =
         firstName: '',
         lastName: '',
         dateOfBirth: '',
-        gender: 'male',
+        gender: Gender.Male,
         contactNumber: '',
         email: '',
         address: '',

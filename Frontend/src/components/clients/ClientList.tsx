@@ -4,7 +4,7 @@ import { clientService } from '../../services/clientService';
 import { ClientProfile } from './ClientProfile';
 import { EnrollmentForm } from '../enrollments/EnrollmentForm';
 import { motion } from 'framer-motion';
-import { FaUser, FaEnvelope, FaPhone, FaSearch, FaTrash } from 'react-icons/fa';
+import { FaUser, FaSearch } from 'react-icons/fa';
 
 interface ClientListProps {
   onClientSelect: (clientId: string) => void;
@@ -15,7 +15,6 @@ export const ClientList: React.FC<ClientListProps> = ({ onClientSelect }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchType, setSearchType] = useState<'all' | 'name' | 'email' | 'contact'>('all');
   const [debouncedQuery, setDebouncedQuery] = useState('');
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const [showEnrollmentForm, setShowEnrollmentForm] = useState(false);
@@ -41,7 +40,7 @@ export const ClientList: React.FC<ClientListProps> = ({ onClientSelect }) => {
     } else {
       fetchClients();
     }
-  }, [debouncedQuery, searchType]);
+  }, [debouncedQuery]);
 
   // Fetch all clients from the API
   const fetchClients = async () => {

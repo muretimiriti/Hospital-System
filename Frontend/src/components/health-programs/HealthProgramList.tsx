@@ -58,17 +58,6 @@ export const HealthProgramList: React.FC = () => {
     setEditingProgram(program);
   };
 
-  const handleUpdate = async (updatedProgram: HealthProgram) => {
-    try {
-      await healthProgramService.updateProgram(updatedProgram.id, updatedProgram);
-      setPrograms(programs.map(p => p.id === updatedProgram.id ? updatedProgram : p));
-      setEditingProgram(null);
-    } catch (err) {
-      setError('Failed to update health program');
-      console.error(err);
-    }
-  };
-
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -113,7 +102,7 @@ export const HealthProgramList: React.FC = () => {
       )}
 
       <div className="grid gap-4">
-        {programs.map((program) => (
+        {programs.filter(program => !!program.id).map((program) => (
           <motion.div
             key={program.id}
             initial={{ opacity: 0, y: 20 }}
@@ -150,7 +139,7 @@ export const HealthProgramList: React.FC = () => {
                   <FaEdit />
                 </button>
                 <button
-                  onClick={() => handleDelete(program.id)}
+                  onClick={() => handleDelete(program.id || '')}
                   className="text-red-600 hover:text-red-900"
                 >
                   <FaTrash />

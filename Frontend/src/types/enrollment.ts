@@ -25,6 +25,7 @@ export interface CreateEnrollmentInput {
   startDate: ISODateString;
   endDate?: ISODateString;
   status?: EnrollmentStatus;
+  notes?: string;
 }
 
 // Input type for updating an enrollment

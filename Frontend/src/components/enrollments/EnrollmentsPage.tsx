@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { FaUserPlus, FaSearch, FaFilter, FaCalendarAlt, FaPlus } from 'react-icons/fa';
+import { FaUserPlus, FaSearch, FaCalendarAlt, FaPlus } from 'react-icons/fa';
 import EnrollClient from './EnrollClient';
 import { EnrollmentWithDetails } from '../../types/enrollment';
 import { Client } from '../../types/client';
 import { HealthProgram } from '../../types/healthProgram';
-import { enrollmentService } from '../../services/enrollmentService';
 
 export const EnrollmentsPage: React.FC = () => {
   const [enrollments, setEnrollments] = useState<EnrollmentWithDetails[]>([]);
@@ -15,7 +14,6 @@ export const EnrollmentsPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [showEnrollModal, setShowEnrollModal] = useState(false);
   const [showClientSelectModal, setShowClientSelectModal] = useState(false);
-  const [selectedClient, setSelectedClient] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState('');
   const [clientSearchQuery, setClientSearchQuery] = useState('');
   const [filters, setFilters] = useState({
@@ -93,32 +91,27 @@ export const EnrollmentsPage: React.FC = () => {
 
     // Program filter - handle both id and _id
     const matchesProgram = filters.program === 'all' || 
-      enrollment.program?.id === filters.program ||
-      enrollment.program?._id === filters.program;
+      enrollment.program?.id === filters.program;
 
     // Date range filter with proper date handling
     let matchesDateRange = true;
     if (filters.startDate || filters.endDate) {
       try {
         const enrollmentStartDate = new Date(enrollment.startDate);
-        const enrollmentEndDate = enrollment.endDate ? new Date(enrollment.endDate) : null;
-        
+        const enrollmentEndDate = enrollment.endDate ? new Date(enrollment.endDate) : undefined;
         if (filters.startDate) {
           const filterStartDate = new Date(filters.startDate);
           filterStartDate.setHours(0, 0, 0, 0);
-          matchesDateRange = matchesDateRange && enrollmentStartDate >= filterStartDate;
+          matchesDateRange = matchesDateRange && (enrollmentStartDate >= filterStartDate);
         }
-        
         if (filters.endDate) {
           const filterEndDate = new Date(filters.endDate);
           filterEndDate.setHours(23, 59, 59, 999);
-          matchesDateRange = matchesDateRange && 
-            (enrollmentStartDate <= filterEndDate || 
-             (enrollmentEndDate && enrollmentEndDate <= filterEndDate));
+          matchesDateRange = matchesDateRange && (enrollmentStartDate <= filterEndDate || (enrollmentEndDate !== undefined && enrollmentEndDate <= filterEndDate));
         }
       } catch (error) {
         console.error('Error processing date filter:', error);
-        matchesDateRange = true; // If date parsing fails, don't filter out the record
+        matchesDateRange = true;
       }
     }
 
@@ -147,8 +140,7 @@ export const EnrollmentsPage: React.FC = () => {
     client.email.toLowerCase().includes(clientSearchQuery.toLowerCase())
   );
 
-  const handleClientSelect = (clientId: string) => {
-    setSelectedClient(clientId);
+  const handleClientSelect = () => {
     setShowClientSelectModal(false);
     setShowEnrollModal(true);
   };
@@ -340,7 +332,6 @@ export const EnrollmentsPage: React.FC = () => {
                       <button
                         onClick={() => {
                           if (enrollment.client?.id) {
-                            setSelectedClient(enrollment.client.id);
                             setShowEnrollModal(true);
                           }
                         }}
@@ -427,7 +418,7 @@ export const EnrollmentsPage: React.FC = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <button
-                          onClick={() => handleClientSelect(client.id)}
+                          onClick={() => handleClientSelect()}
                           className="text-blue-600 hover:text-blue-900"
                         >
                           Select

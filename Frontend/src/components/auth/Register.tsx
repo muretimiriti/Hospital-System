@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { FaUser, FaLock, FaEnvelope, FaHospital } from 'react-icons/fa';
-import { theme } from '../../styles/theme';
+import { FaLock, FaEnvelope, FaHospital } from 'react-icons/fa';
 
 interface RegisterFormData {
   email: string;
