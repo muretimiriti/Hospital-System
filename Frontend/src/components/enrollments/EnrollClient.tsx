@@ -13,7 +13,7 @@ interface EnrollClientProps {
   onCancel: () => void;
 }
 
-export const EnrollClient: React.FC<EnrollClientProps> = ({
+const EnrollClient: React.FC<EnrollClientProps> = ({
   onEnrollmentComplete,
   onCancel
 }) => {
@@ -103,6 +103,17 @@ export const EnrollClient: React.FC<EnrollClientProps> = ({
     });
   };
 
+  const isProgramEnrolled = (programId: string) => {
+    if (!selectedClient) return false;
+    return enrollments.some(enrollment => 
+      enrollment.program && 
+      enrollment.program.id === programId && 
+      enrollment.status === EnrollmentStatus.Active &&
+      enrollment.client && 
+      enrollment.client.id === selectedClient
+    );
+  };
+
   const validateDates = () => {
     if (endDate && new Date(endDate) < new Date(startDate)) {
       setError('End date cannot be before start date');
@@ -122,17 +133,26 @@ export const EnrollClient: React.FC<EnrollClientProps> = ({
       return;
     }
 
-    try {
-      const enrollmentData: CreateEnrollmentInput = {
-        clientId: selectedClient,
-        programId: selectedPrograms[0],
-        startDate: new Date(startDate).toISOString(),
-        endDate: endDate ? new Date(endDate).toISOString() : undefined,
-        status: selectedStatus
-      };
+    if (selectedPrograms.length === 0) {
+      setError('Please select at least one program');
+      setLoading(false);
+      return;
+    }
 
-      await enrollmentService.createEnrollment(enrollmentData);
-      setSuccess('Successfully enrolled in program');
+    try {
+      const enrollmentPromises = selectedPrograms.map(programId => {
+        const enrollmentData: CreateEnrollmentInput = {
+          clientId: selectedClient,
+          programId,
+          startDate: new Date(startDate).toISOString(),
+          endDate: endDate ? new Date(endDate).toISOString() : undefined,
+          status: selectedStatus
+        };
+        return enrollmentService.createEnrollment(enrollmentData);
+      });
+
+      await Promise.all(enrollmentPromises);
+      setSuccess('Successfully enrolled in programs');
       
       if (selectedClient) {
         fetchClientEnrollments(selectedClient);
@@ -142,7 +162,7 @@ export const EnrollClient: React.FC<EnrollClientProps> = ({
         onEnrollmentComplete();
       }, 1500);
     } catch (err: any) {
-      setError(err.message || 'Failed to enroll in program');
+      setError(err.message || 'Failed to enroll in programs');
     } finally {
       setLoading(false);
     }
@@ -257,20 +277,25 @@ export const EnrollClient: React.FC<EnrollClientProps> = ({
             Select Programs
           </label>
           <div className="space-y-2 max-h-60 overflow-y-auto">
-            {programs.map((program) => (
-              <div key={program.id} className="flex items-center">
-                <input
-                  type="checkbox"
-                  id={`program-${program.id}`}
-                  checked={selectedPrograms.includes(program.id)}
-                  onChange={() => handleProgramSelect(program.id)}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                />
-                <label htmlFor={`program-${program.id}`} className="ml-2 block text-sm text-gray-900">
-                  {program.name} - {program.description}
-                </label>
-              </div>
-            ))}
+            {programs.map((program) => {
+              const isEnrolled = isProgramEnrolled(program.id);
+              return (
+                <div key={program.id} className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id={`program-${program.id}`}
+                    checked={selectedPrograms.includes(program.id)}
+                    onChange={() => handleProgramSelect(program.id)}
+                    disabled={isEnrolled}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  />
+                  <label htmlFor={`program-${program.id}`} className="ml-2 block text-sm text-gray-900">
+                    {program.name} - {program.description}
+                    {isEnrolled && <span className="text-sm text-gray-500 ml-2">(Already enrolled)</span>}
+                  </label>
+                </div>
+              );
+            })}
           </div>
         </div>
 
@@ -408,4 +433,6 @@ export const EnrollClient: React.FC<EnrollClientProps> = ({
       </div>
     </motion.div>
   );
-}; 
+};
+
+export default EnrollClient; 

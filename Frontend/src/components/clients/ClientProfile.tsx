@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { FaTrash, FaSearch, FaClock, FaDollarSign, FaCalendar } from 'react-icons/fa';
 import { Client } from '../../types/client';
 import { EnrollmentWithDetails } from '../../types/enrollment';
-import { EnrollClient } from '../enrollments/EnrollClient';
+import EnrollClient from '../enrollments/EnrollClient';
 import { useParams, useNavigate } from 'react-router-dom';
 import { clientService } from '../../services/clientService';
 import { formatDate } from '../../utils/dateUtils';

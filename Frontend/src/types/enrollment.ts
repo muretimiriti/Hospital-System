@@ -46,6 +46,11 @@ export interface EnrollmentWithDetails {
     startDate: string;
     endDate: string;
   };
+  client?: {
+    id: string;
+    firstName: string;
+    lastName: string;
+  };
   status: EnrollmentStatus;
   startDate: string;
   endDate?: string;

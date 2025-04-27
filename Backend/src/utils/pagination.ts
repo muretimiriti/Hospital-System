@@ -3,6 +3,7 @@ import { Request } from 'express';
 export interface PaginationParams {
   page: number;
   limit: number;
+  skip: number;
   sortBy: string;
   sortOrder: 'asc' | 'desc';
 }
@@ -10,12 +11,14 @@ export interface PaginationParams {
 export const getPaginationParams = (req: Request): PaginationParams => {
   const page = parseInt(req.query.page as string) || 1;
   const limit = parseInt(req.query.limit as string) || 10;
+  const skip = (page - 1) * limit;
   const sortBy = (req.query.sortBy as string) || 'createdAt';
   const sortOrder = (req.query.sortOrder as 'asc' | 'desc') || 'desc';
 
   return {
     page,
     limit,
+    skip,
     sortBy,
     sortOrder
   };

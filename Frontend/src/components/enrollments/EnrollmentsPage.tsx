@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { FaUserPlus, FaSearch, FaFilter, FaCalendarAlt, FaPlus } from 'react-icons/fa';
-import { EnrollClient } from '../../components/enrollments/EnrollClient';
+import EnrollClient from './EnrollClient';
 import { EnrollmentWithDetails } from '../../types/enrollment';
 import { Client } from '../../types/client';
 import { HealthProgram } from '../../types/healthProgram';
+import { enrollmentService } from '../../services/enrollmentService';
 
 export const EnrollmentsPage: React.FC = () => {
   const [enrollments, setEnrollments] = useState<EnrollmentWithDetails[]>([]);
@@ -246,9 +247,7 @@ export const EnrollmentsPage: React.FC = () => {
                   className="hover:bg-gray-50"
                 >
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">
-                      {enrollment.client.firstName} {enrollment.client.lastName}
-                    </div>
+                    {enrollment.client?.firstName} {enrollment.client?.lastName}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-900">{enrollment.program.name}</div>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { CreateHealthProgramInput, HealthProgram } from '../../types/healthProgram';
+import { CreateHealthProgramInput, HealthProgram, UpdateHealthProgramInput } from '../../types/healthProgram';
 import { healthProgramService } from '../../services/healthProgramService';
 
 interface CreateHealthProgramProps {
@@ -90,8 +90,18 @@ export const CreateHealthProgram: React.FC<CreateHealthProgramProps> = ({
     }
 
     try {
-      if (initialData) {
-        await healthProgramService.updateProgram(initialData.id, formData);
+      if (initialData && initialData.id) {
+        // Create update data object with only changed fields
+        const updateData: UpdateHealthProgramInput = {};
+        if (formData.name !== initialData.name) updateData.name = formData.name;
+        if (formData.description !== initialData.description) updateData.description = formData.description;
+        if (formData.duration !== initialData.duration) updateData.duration = formData.duration;
+        if (formData.cost !== initialData.cost) updateData.cost = formData.cost;
+        if (formData.maxParticipants !== initialData.maxParticipants) updateData.maxParticipants = formData.maxParticipants;
+        if (formData.startDate !== initialData.startDate) updateData.startDate = formData.startDate;
+        if (formData.endDate !== initialData.endDate) updateData.endDate = formData.endDate;
+
+        await healthProgramService.updateProgram(initialData.id, updateData);
       } else {
         await healthProgramService.createProgram(formData);
       }
@@ -105,8 +115,9 @@ export const CreateHealthProgram: React.FC<CreateHealthProgramProps> = ({
         endDate: ''
       });
       onProgramCreated();
-    } catch (err) {
-      setError(`Failed to ${initialData ? 'update' : 'create'} health program`);
+    } catch (err: any) {
+      // Display the specific error message from the server
+      setError(err.message || `Failed to ${initialData ? 'update' : 'create'} health program`);
       console.error(err);
     } finally {
       setLoading(false);

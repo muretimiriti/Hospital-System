@@ -1,20 +1,31 @@
 import { Request, Response } from 'express';
 import Enrollment, { IEnrollment } from '../models/Enrollment';
-import Client from '../models/Client';
-import HealthProgram from '../models/HealthProgram';
+import Client, { IClient } from '../models/Client';
+import HealthProgram, { IHealthProgram } from '../models/HealthProgram';
 import { handleMongooseError } from '../utils/errorHandler';
 import mongoose, { Types } from 'mongoose';
 
 // Helper function to validate ObjectId
 const isValidObjectId = (id: string): boolean => mongoose.Types.ObjectId.isValid(id);
 
+// Type for populated enrollment
+interface PopulatedEnrollment extends Omit<IEnrollment, 'client' | 'program'> {
+  client: IClient | null;
+  program: IHealthProgram | null;
+}
+
 // Controller function to create a new enrollment
 export const createEnrollment = async (req: Request, res: Response) => {
   try {
-    const { clientId, programId, notes } = req.body;
+    const { clientId, programId, startDate, endDate, status, notes } = req.body;
 
     // Create enrollment data object
-    const enrollmentData: any = { notes };
+    const enrollmentData: Partial<IEnrollment> = { 
+      notes,
+      startDate: new Date(startDate),
+      endDate: endDate ? new Date(endDate) : undefined,
+      status: status || 'active'
+    };
 
     // Only validate and add client if provided
     if (clientId) {
@@ -25,7 +36,7 @@ export const createEnrollment = async (req: Request, res: Response) => {
       if (!clientExists) {
         return res.status(404).json({ message: 'Client not found' });
       }
-      enrollmentData.client = clientId;
+      enrollmentData.client = new Types.ObjectId(clientId);
     }
 
     // Only validate and add program if provided
@@ -37,7 +48,7 @@ export const createEnrollment = async (req: Request, res: Response) => {
       if (!programExists) {
         return res.status(404).json({ message: 'Health program not found' });
       }
-      enrollmentData.program = programId;
+      enrollmentData.program = new Types.ObjectId(programId);
     }
 
     // Create and save the new enrollment
@@ -48,12 +59,51 @@ export const createEnrollment = async (req: Request, res: Response) => {
     if (clientId) {
       const clientExists = await Client.findById(clientId);
       if (clientExists) {
-        clientExists.enrolledPrograms.push(newEnrollment._id! as Types.ObjectId);
+        // Get the enrollment ID and create a new ObjectId
+        const enrollmentId = newEnrollment._id as unknown as Types.ObjectId;
+        clientExists.enrolledPrograms.push(enrollmentId);
         await clientExists.save();
       }
     }
 
-    res.status(201).json(newEnrollment);
+    // Populate the response with client and program details
+    const populatedEnrollment = await Enrollment.findById(newEnrollment._id)
+      .populate<{ program: IHealthProgram; client: IClient }>({
+        path: 'program',
+        select: 'name description duration cost startDate endDate'
+      })
+      .populate({
+        path: 'client',
+        select: 'firstName lastName email'
+      }) as PopulatedEnrollment | null;
+
+    if (!populatedEnrollment) {
+      return res.status(404).json({ message: 'Enrollment not found after creation' });
+    }
+
+    // Transform the data to match the expected structure
+    const transformedEnrollment = {
+      id: populatedEnrollment._id,
+      program: populatedEnrollment.program ? {
+        id: populatedEnrollment.program._id,
+        name: populatedEnrollment.program.name,
+        description: populatedEnrollment.program.description,
+        duration: populatedEnrollment.program.duration,
+        cost: populatedEnrollment.program.cost,
+        startDate: populatedEnrollment.program.startDate,
+        endDate: populatedEnrollment.program.endDate
+      } : null,
+      client: populatedEnrollment.client ? {
+        id: populatedEnrollment.client._id,
+        firstName: populatedEnrollment.client.firstName,
+        lastName: populatedEnrollment.client.lastName
+      } : null,
+      status: populatedEnrollment.status,
+      startDate: populatedEnrollment.startDate,
+      endDate: populatedEnrollment.endDate
+    };
+
+    res.status(201).json(transformedEnrollment);
   } catch (error: any) {
     // Handle potential duplicate key error (client already enrolled in program)
     if (error.code === 11000) {
@@ -68,9 +118,9 @@ export const getAllEnrollments = async (req: Request, res: Response) => {
   try {
     // TODO: Add filtering capabilities (e.g., by client, program, status)
     const enrollments = await Enrollment.find()
-      .populate('client', 'firstName lastName email') // Populate client fields
-      .populate('program', 'name') // Populate program name
-      .sort({ createdAt: -1 });
+      .populate<{ client: IClient }>('client', 'firstName lastName email')
+      .populate<{ program: IHealthProgram }>('program', 'name')
+      .sort({ createdAt: -1 }) as PopulatedEnrollment[];
 
     res.status(200).json(enrollments);
   } catch (error: any) {
@@ -89,14 +139,43 @@ export const getClientEnrollments = async (req: Request, res: Response) => {
     }
 
     const enrollments = await Enrollment.find({ client: clientId })
-      .populate('program', 'name description') // Populate program details
-      .sort({ createdAt: -1 });
+      .populate<{ program: IHealthProgram }>({
+        path: 'program',
+        select: 'name description duration cost startDate endDate'
+      })
+      .populate<{ client: IClient }>({
+        path: 'client',
+        select: 'firstName lastName email'
+      })
+      .sort({ createdAt: -1 }) as PopulatedEnrollment[];
 
     if (!enrollments) {
       return res.status(404).json({ message: 'No enrollments found for this client' });
     }
 
-    res.status(200).json(enrollments);
+    // Transform the data to match the expected structure
+    const transformedEnrollments = enrollments.map(enrollment => ({
+      id: enrollment._id,
+      program: enrollment.program ? {
+        id: enrollment.program._id,
+        name: enrollment.program.name,
+        description: enrollment.program.description,
+        duration: enrollment.program.duration,
+        cost: enrollment.program.cost,
+        startDate: enrollment.program.startDate,
+        endDate: enrollment.program.endDate
+      } : null,
+      client: enrollment.client ? {
+        id: enrollment.client._id,
+        firstName: enrollment.client.firstName,
+        lastName: enrollment.client.lastName
+      } : null,
+      status: enrollment.status,
+      startDate: enrollment.startDate,
+      endDate: enrollment.endDate
+    }));
+
+    res.status(200).json(transformedEnrollments);
   } catch (error: any) {
     console.error('Error fetching client enrollments:', error);
     res.status(500).json({ message: 'Server error fetching client enrollments' });
@@ -113,8 +192,8 @@ export const getEnrollmentById = async (req: Request, res: Response) => {
     }
 
     const enrollment = await Enrollment.findById(enrollmentId)
-      .populate('client', 'firstName lastName email')
-      .populate('program', 'name description');
+      .populate<{ client: IClient }>('client', 'firstName lastName email')
+      .populate<{ program: IHealthProgram }>('program', 'name description') as PopulatedEnrollment | null;
 
     if (!enrollment) {
       return res.status(404).json({ message: 'Enrollment not found' });
@@ -150,9 +229,7 @@ export const updateEnrollment = async (req: Request, res: Response) => {
       enrollmentId,
       { $set: updateData },
       { new: true, runValidators: true }
-    )
-      .populate('client', 'firstName lastName email')
-      .populate('program', 'name description');
+    );
 
     if (!updatedEnrollment) {
       return res.status(404).json({ message: 'Enrollment not found' });
@@ -173,18 +250,23 @@ export const deleteEnrollment = async (req: Request, res: Response) => {
       return res.status(400).json({ message: 'Invalid Enrollment ID format' });
     }
 
-    const deletedEnrollment = await Enrollment.findByIdAndDelete(enrollmentId);
-
-    if (!deletedEnrollment) {
+    const enrollment = await Enrollment.findById(enrollmentId);
+    if (!enrollment) {
       return res.status(404).json({ message: 'Enrollment not found' });
     }
 
-    // Remove enrollment reference from the corresponding client
-    await Client.updateOne(
-      { _id: deletedEnrollment.client },
-      { $pull: { enrolledPrograms: enrollmentId } }
-    );
+    // Remove enrollment reference from client's enrolledPrograms array
+    if (enrollment.client) {
+      const client = await Client.findById(enrollment.client);
+      if (client) {
+        client.enrolledPrograms = client.enrolledPrograms.filter(
+          id => id.toString() !== enrollmentId
+        );
+        await client.save();
+      }
+    }
 
+    await enrollment.deleteOne();
     res.status(200).json({ message: 'Enrollment deleted successfully' });
   } catch (error: any) {
     console.error('Error deleting enrollment:', error);

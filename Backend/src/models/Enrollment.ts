@@ -4,6 +4,8 @@ export interface IEnrollment extends Document {
   client: Types.ObjectId; // Reference to Client
   program: Types.ObjectId; // Reference to HealthProgram
   enrollmentDate: Date;
+  startDate: Date;
+  endDate?: Date;
   status: 'active' | 'completed' | 'cancelled';
   notes?: string;
   createdAt: Date;
@@ -25,6 +27,14 @@ const EnrollmentSchema: Schema = new Schema(
     enrollmentDate: {
       type: Date,
       default: Date.now,
+    },
+    startDate: {
+      type: Date,
+      required: true,
+    },
+    endDate: {
+      type: Date,
+      required: false,
     },
     status: {
       type: String,

@@ -41,15 +41,43 @@ export const healthProgramService = {
       },
       body: JSON.stringify(program),
     });
+    
     if (!response.ok) {
-      throw new Error('Failed to create health program');
+      const errorData = await response.json();
+      if (response.status === 409) {
+        throw new Error(`A program with the name "${program.name}" already exists`);
+      }
+      throw new Error(errorData.message || 'Failed to create health program');
     }
+    
     return response.json();
   },
 
   // Update an existing health program
   async updateProgram(id: string, program: UpdateHealthProgramInput): Promise<ApiResponse<HealthProgram>> {
-    const response = await fetch(`${API_CONFIG.baseUrl}/health-programs/${id}`, {
+    // First, get the current program to check if we're updating the name
+    const currentProgram = await this.getProgramById(id);
+    
+    // If we're updating the name, check if it's different from the current name
+    if (program.name && program.name !== currentProgram.data.name) {
+      // Check if the new name already exists
+      const response = await fetch(`${API_CONFIG.baseUrl}/health-programs?name=${encodeURIComponent(program.name)}`, {
+        headers: {
+          ...API_CONFIG.headers,
+          ...getAuthHeader(),
+        },
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.data && data.data.length > 0) {
+          throw new Error(`A program with the name "${program.name}" already exists`);
+        }
+      }
+    }
+    
+    // Proceed with the update
+    const updateResponse = await fetch(`${API_CONFIG.baseUrl}/health-programs/${id}`, {
       method: 'PUT',
       headers: {
         ...API_CONFIG.headers,
@@ -57,10 +85,13 @@ export const healthProgramService = {
       },
       body: JSON.stringify(program),
     });
-    if (!response.ok) {
-      throw new Error('Failed to update health program');
+    
+    if (!updateResponse.ok) {
+      const errorData = await updateResponse.json();
+      throw new Error(errorData.message || 'Failed to update health program');
     }
-    return response.json();
+    
+    return updateResponse.json();
   },
 
   // Delete a health program
