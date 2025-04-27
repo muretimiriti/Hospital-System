@@ -3,6 +3,7 @@ import Client, { IClient } from '../models/Client';
 import Enrollment from '../models/Enrollment'; // Needed for cleanup on delete
 import { handleMongooseError } from '../utils/errorHandler';
 import { getPaginationParams, getPaginationResponse } from '../utils/pagination';
+import { isValidObjectId } from 'mongoose';
 
 // Controller function to create a new client
 export const createClient = async (req: Request, res: Response) => {
@@ -155,5 +156,64 @@ export const searchClients = async (req: Request, res: Response) => {
   } catch (error: any) {
     console.error('Error searching clients:', error);
     res.status(500).json({ message: 'Server error searching clients' });
+  }
+};
+
+// Get client details with enrolled programs
+export const getClientWithPrograms = async (req: Request, res: Response) => {
+  try {
+    const { clientId } = req.params;
+
+    if (!isValidObjectId(clientId)) {
+      return res.status(400).json({ message: 'Invalid Client ID format' });
+    }
+
+    // First get the client
+    const client = await Client.findById(clientId);
+    if (!client) {
+      return res.status(404).json({ message: 'Client not found' });
+    }
+
+    // Then get all enrollments for this client with populated program data
+    const enrollments = await Enrollment.find({ client: clientId })
+      .populate({
+        path: 'program',
+        model: 'HealthProgram',
+        select: 'name description duration cost startDate endDate'
+      });
+
+    console.log('Found enrollments:', JSON.stringify(enrollments, null, 2));
+
+    // Transform the data to include program details
+    const clientWithPrograms = {
+      ...client.toObject(),
+      enrolledPrograms: enrollments.map((enrollment: any) => {
+        console.log('Processing enrollment:', JSON.stringify(enrollment, null, 2));
+        return {
+          id: enrollment._id,
+          program: enrollment.program ? {
+            id: enrollment.program._id,
+            name: enrollment.program.name,
+            description: enrollment.program.description,
+            duration: enrollment.program.duration || 0,
+            cost: enrollment.program.cost || 0,
+            startDate: enrollment.program.startDate || '',
+            endDate: enrollment.program.endDate || ''
+          } : null,
+          status: enrollment.status,
+          startDate: enrollment.startDate,
+          endDate: enrollment.endDate
+        };
+      })
+    };
+
+    console.log('Client with programs:', JSON.stringify(clientWithPrograms, null, 2));
+    res.status(200).json({
+      success: true,
+      data: clientWithPrograms
+    });
+  } catch (error) {
+    console.error('Error fetching client with programs:', error);
+    res.status(500).json({ message: 'Server error fetching client details' });
   }
 }; 

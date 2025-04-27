@@ -1,4 +1,5 @@
 import { EntityId, ISODateString, Gender } from './common';
+import { EnrollmentWithDetails } from './enrollment';
 
 // Core client data structure
 export interface Client {
@@ -10,7 +11,7 @@ export interface Client {
   contactNumber: string;
   email: string;
   address: string;
-  enrolledPrograms: EntityId[];
+  enrolledPrograms: EnrollmentWithDetails[];
   createdAt: ISODateString;
   updatedAt: ISODateString;
 }

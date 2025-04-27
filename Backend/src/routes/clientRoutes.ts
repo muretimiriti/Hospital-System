@@ -6,6 +6,7 @@ import {
   updateClient,
   deleteClient,
   searchClients,
+  getClientWithPrograms,
 } from '../controllers/clientController';
 import enrollmentRoutes from './enrollmentRoutes'; // Import enrollment routes
 import { protect } from '../middleware/authMiddleware'; // Ensure this path is correct
@@ -289,5 +290,8 @@ router.delete('/:id', protect, asyncHandler(deleteClient));
 // Use enrollmentRoutes for paths like /api/clients/:clientId/enrollments
 // The protection for these nested routes will be handled within enrollmentRoutes if needed
 router.use('/:clientId/enrollments', enrollmentRoutes);
+
+// Get client details with enrolled programs
+router.get('/:clientId/programs', protect, asyncHandler(getClientWithPrograms));
 
 export default router; 

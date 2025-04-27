@@ -1,17 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { FaUser, FaEnvelope, FaPhone, FaAddressCard, FaCalendarAlt, FaVenusMars, FaPlus, FaTrash, FaSearch } from 'react-icons/fa';
+import { FaTrash, FaSearch, FaClock, FaDollarSign, FaCalendar } from 'react-icons/fa';
 import { Client } from '../../types/client';
 import { EnrollmentWithDetails } from '../../types/enrollment';
 import { EnrollClient } from '../enrollments/EnrollClient';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
+import { clientService } from '../../services/clientService';
+import { formatDate } from '../../utils/dateUtils';
 
-interface ClientProfileProps {
-  onBack: () => void;
-}
-
-export const ClientProfile: React.FC<ClientProfileProps> = ({ onBack }) => {
+export const ClientProfile: React.FC = () => {
   const { clientId } = useParams<{ clientId: string }>();
+  const navigate = useNavigate();
   console.log('ClientProfile rendered with clientId from URL:', clientId);
 
   const [client, setClient] = useState<Client | null>(null);
@@ -49,22 +48,14 @@ export const ClientProfile: React.FC<ClientProfileProps> = ({ onBack }) => {
   }, [clientSearchQuery, clients]);
 
   const fetchClientData = async () => {
+    if (!clientId) return;
+    
     try {
       console.log('Fetching client data for ID:', clientId);
-      const response = await fetch(`http://localhost:5000/api/clients/${clientId}`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch client data');
-      }
-
-      const data = await response.json();
-      console.log('Fetched client data:', data.data);
-      setClient(data.data);
-      setEnrollments(data.data.enrollments || []);
+      const data = await clientService.getClientWithPrograms(clientId);
+      console.log('Fetched client data:', data);
+      setClient(data);
+      setEnrollments(data.enrolledPrograms || []);
     } catch (err: any) {
       console.error('Error fetching client data:', err);
       setError(err.message || 'Failed to load client data');
@@ -123,6 +114,10 @@ export const ClientProfile: React.FC<ClientProfileProps> = ({ onBack }) => {
     setShowEnrollModal(true);
   };
 
+  const handleBack = () => {
+    navigate('/clients');
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -145,104 +140,105 @@ export const ClientProfile: React.FC<ClientProfileProps> = ({ onBack }) => {
   }
 
   return (
-    <div className="p-4 md:p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Client Profile</h1>
-        <motion.button
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          onClick={onBack}
-          className="text-blue-500 hover:text-blue-600"
-        >
-          Back to List
-        </motion.button>
-      </div>
-
-      {/* Client Information */}
-      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <h2 className="text-xl font-semibold mb-4">Personal Information</h2>
-            <div className="space-y-4">
-              <div className="flex items-center">
-                <FaUser className="text-gray-400 mr-3" />
-                <div>
-                  <p className="text-sm text-gray-500">Name</p>
-                  <p className="font-medium">{client.firstName} {client.lastName}</p>
-                </div>
-              </div>
-              <div className="flex items-center">
-                <FaEnvelope className="text-gray-400 mr-3" />
-                <div>
-                  <p className="text-sm text-gray-500">Email</p>
-                  <p className="font-medium">{client.email}</p>
-                </div>
-              </div>
-              <div className="flex items-center">
-                <FaPhone className="text-gray-400 mr-3" />
-                <div>
-                  <p className="text-sm text-gray-500">Phone</p>
-                  <p className="font-medium">{client.contactNumber}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div>
-            <h2 className="text-xl font-semibold mb-4">Additional Information</h2>
-            <div className="space-y-4">
-              <div className="flex items-center">
-                <FaAddressCard className="text-gray-400 mr-3" />
-                <div>
-                  <p className="text-sm text-gray-500">Address</p>
-                  <p className="font-medium">{client.address}</p>
-                </div>
-              </div>
-              <div className="flex items-center">
-                <FaCalendarAlt className="text-gray-400 mr-3" />
-                <div>
-                  <p className="text-sm text-gray-500">Date of Birth</p>
-                  <p className="font-medium">{new Date(client.dateOfBirth).toLocaleDateString()}</p>
-                </div>
-              </div>
-              <div className="flex items-center">
-                <FaVenusMars className="text-gray-400 mr-3" />
-                <div>
-                  <p className="text-sm text-gray-500">Gender</p>
-                  <p className="font-medium capitalize">{client.gender}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Program Enrollments */}
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold">Program Enrollments</h2>
+    <div className="container mx-auto px-4 py-8">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-white rounded-lg shadow-lg p-6"
+      >
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold text-gray-800">Client Profile</h1>
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            onClick={handleEnrollClick}
-            className="flex items-center px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+            onClick={handleBack}
+            className="text-blue-500 hover:text-blue-600"
           >
-            <FaPlus className="mr-2" />
-            Enroll in Program
+            Back to List
           </motion.button>
         </div>
 
-        {enrollments.length === 0 ? (
-          <p className="text-gray-500">No program enrollments</p>
-        ) : (
-          <div className="space-y-4">
+        {/* Personal Information */}
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold mb-4">Personal Information</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <p className="text-gray-600">Name</p>
+              <p className="font-semibold">{`${client.firstName} ${client.lastName}`}</p>
+            </div>
+            <div>
+              <p className="text-gray-600">Email</p>
+              <p className="font-semibold">{client.email}</p>
+            </div>
+            <div>
+              <p className="text-gray-600">Phone</p>
+              <p className="font-semibold">{client.contactNumber}</p>
+            </div>
+            <div>
+              <p className="text-gray-600">Address</p>
+              <p className="font-semibold">{client.address}</p>
+            </div>
+            <div>
+              <p className="text-gray-600">Date of Birth</p>
+              <p className="font-semibold">{formatDate(client.dateOfBirth)}</p>
+            </div>
+            <div>
+              <p className="text-gray-600">Gender</p>
+              <p className="font-semibold">{client.gender}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Enrolled Programs */}
+        <div className="mb-8">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-2xl font-bold">Enrolled Programs</h2>
+            <button
+              onClick={handleEnrollClick}
+              className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition duration-200"
+            >
+              Enroll in Program
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {enrollments.map((enrollment) => (
-              <div key={enrollment.id} className="flex justify-between items-center p-4 bg-gray-50 rounded-md">
-                <div>
-                  <h3 className="font-medium">{enrollment.program.name}</h3>
-                  <p className="text-sm text-gray-500">{enrollment.program.description}</p>
-                  <p className="text-xs text-gray-400">
-                    Status: <span className="capitalize">{enrollment.status}</span>
-                  </p>
+              <motion.div
+                key={enrollment.id}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="bg-gray-50 rounded-lg p-4 shadow"
+              >
+                <h3 className="text-lg font-semibold mb-2">{enrollment.program?.name || 'Unknown Program'}</h3>
+                <p className="text-gray-600 mb-2">{enrollment.program?.description || 'No description available'}</p>
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div className="flex items-center">
+                    <FaClock className="mr-2 text-blue-500" />
+                    <span>{enrollment.program?.duration || 0} weeks</span>
+                  </div>
+                  <div className="flex items-center">
+                    <FaDollarSign className="mr-2 text-green-500" />
+                    <span>${enrollment.program?.cost || 0}</span>
+                  </div>
+                  <div className="flex items-center">
+                    <FaCalendar className="mr-2 text-purple-500" />
+                    <span>{formatDate(enrollment.startDate)}</span>
+                  </div>
+                  <div className="flex items-center">
+                    <FaCalendar className="mr-2 text-red-500" />
+                    <span>{formatDate(enrollment.endDate)}</span>
+                  </div>
+                </div>
+                <div className="mt-2">
+                  <span className={`inline-block px-2 py-1 rounded text-sm ${
+                    enrollment.status === 'active'
+                      ? 'bg-green-100 text-green-800'
+                      : enrollment.status === 'completed'
+                      ? 'bg-blue-100 text-blue-800'
+                      : 'bg-gray-100 text-gray-800'
+                  }`}>
+                    {enrollment.status}
+                  </span>
                 </div>
                 <motion.button
                   whileHover={{ scale: 1.05 }}
@@ -252,11 +248,11 @@ export const ClientProfile: React.FC<ClientProfileProps> = ({ onBack }) => {
                 >
                   <FaTrash />
                 </motion.button>
-              </div>
+              </motion.div>
             ))}
           </div>
-        )}
-      </div>
+        </div>
+      </motion.div>
 
       {/* Client Selection Modal */}
       {showClientSelectModal && (
@@ -336,7 +332,7 @@ export const ClientProfile: React.FC<ClientProfileProps> = ({ onBack }) => {
       )}
 
       {/* Enroll Client Modal */}
-      {showEnrollModal && clientId && (
+      {showEnrollModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
           <EnrollClient
             onEnrollmentComplete={() => {

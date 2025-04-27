@@ -152,7 +152,7 @@ export const ClientList: React.FC<ClientListProps> = ({ onClientSelect }) => {
             onEnrollmentCreated={handleEnrollmentCreated}
           />
         ) : (
-          <ClientProfile clientId={selectedClientId} />
+          <ClientProfile onBack={() => setSelectedClientId(null)} />
         )}
       </div>
     );

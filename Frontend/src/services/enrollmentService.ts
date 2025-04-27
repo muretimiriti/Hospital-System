@@ -1,31 +1,46 @@
 import { Enrollment, CreateEnrollmentInput, UpdateEnrollmentInput, EnrollmentWithDetails } from '../types/enrollment';
 
-const API_URL = 'http://localhost:3000/api';
+const API_URL = 'http://localhost:5000/api';
 
 export const enrollmentService = {
   // Fetch all enrollments with client and program details
   async getAllEnrollments(): Promise<EnrollmentWithDetails[]> {
-    const response = await fetch(`${API_URL}/enrollments`);
+    const response = await fetch(`${API_URL}/enrollments`, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      }
+    });
     if (!response.ok) {
-      throw new Error('Failed to fetch enrollments');
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to fetch enrollments');
     }
     return response.json();
   },
 
   // Fetch enrollments for a specific client
   async getClientEnrollments(clientId: string): Promise<EnrollmentWithDetails[]> {
-    const response = await fetch(`${API_URL}/clients/${clientId}/enrollments`);
+    const response = await fetch(`${API_URL}/clients/${clientId}/enrollments`, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      }
+    });
     if (!response.ok) {
-      throw new Error('Failed to fetch client enrollments');
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to fetch client enrollments');
     }
     return response.json();
   },
 
   // Fetch enrollments for a specific program
   async getProgramEnrollments(programId: string): Promise<EnrollmentWithDetails[]> {
-    const response = await fetch(`${API_URL}/programs/${programId}/enrollments`);
+    const response = await fetch(`${API_URL}/programs/${programId}/enrollments`, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      }
+    });
     if (!response.ok) {
-      throw new Error('Failed to fetch program enrollments');
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to fetch program enrollments');
     }
     return response.json();
   },
@@ -36,11 +51,13 @@ export const enrollmentService = {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
       },
       body: JSON.stringify(enrollment),
     });
     if (!response.ok) {
-      throw new Error('Failed to create enrollment');
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to create enrollment');
     }
     return response.json();
   },
@@ -51,11 +68,13 @@ export const enrollmentService = {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
       },
       body: JSON.stringify(enrollment),
     });
     if (!response.ok) {
-      throw new Error('Failed to update enrollment');
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to update enrollment');
     }
     return response.json();
   },
@@ -64,9 +83,13 @@ export const enrollmentService = {
   async deleteEnrollment(id: string): Promise<void> {
     const response = await fetch(`${API_URL}/enrollments/${id}`, {
       method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      }
     });
     if (!response.ok) {
-      throw new Error('Failed to delete enrollment');
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to delete enrollment');
     }
   },
 

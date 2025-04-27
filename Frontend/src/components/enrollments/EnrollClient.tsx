@@ -5,6 +5,8 @@ import { HealthProgram } from '../../types/healthProgram';
 import { EnrollmentStatus, CreateEnrollmentInput } from '../../types/enrollment';
 import { Client } from '../../types/client';
 import { EnrollmentWithDetails } from '../../types/enrollment';
+import { enrollmentService } from '../../services/enrollmentService';
+import { useParams } from 'react-router-dom';
 
 interface EnrollClientProps {
   onEnrollmentComplete: () => void;
@@ -15,9 +17,10 @@ export const EnrollClient: React.FC<EnrollClientProps> = ({
   onEnrollmentComplete,
   onCancel
 }) => {
+  const { clientId } = useParams<{ clientId: string }>();
   const [programs, setPrograms] = useState<HealthProgram[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
-  const [selectedClient, setSelectedClient] = useState<string>('');
+  const [selectedClient, setSelectedClient] = useState<string>(clientId || '');
   const [selectedPrograms, setSelectedPrograms] = useState<string[]>([]);
   const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
   const [endDate, setEndDate] = useState('');
@@ -25,15 +28,17 @@ export const EnrollClient: React.FC<EnrollClientProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [clientSearchQuery, setClientSearchQuery] = useState('');
-  const [showClientSelect, setShowClientSelect] = useState(true);
+  const [showClientSelect, setShowClientSelect] = useState(!clientId);
   const [selectedStatus, setSelectedStatus] = useState<EnrollmentStatus>(EnrollmentStatus.Active);
   const [enrollments, setEnrollments] = useState<EnrollmentWithDetails[]>([]);
 
   useEffect(() => {
     fetchPrograms();
     fetchClients();
-    fetchEnrollments();
-  }, []);
+    if (clientId) {
+      fetchClientEnrollments(clientId);
+    }
+  }, [clientId]);
 
   useEffect(() => {
     console.log('Selected client state:', selectedClient);
@@ -79,23 +84,13 @@ export const EnrollClient: React.FC<EnrollClientProps> = ({
     }
   };
 
-  const fetchEnrollments = async () => {
+  const fetchClientEnrollments = async (clientId: string) => {
     try {
-      const response = await fetch('http://localhost:5000/api/enrollments', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch enrollments');
-      }
-
-      const data = await response.json();
-      setEnrollments(data);
+      const enrollments = await enrollmentService.getClientEnrollments(clientId);
+      setEnrollments(enrollments);
     } catch (err: any) {
-      console.error('Error fetching enrollments:', err);
-      setError(err.message || 'Failed to load enrollments');
+      console.error('Error fetching client enrollments:', err);
+      setError(err.message || 'Failed to load client enrollments');
     }
   };
 
@@ -129,35 +124,20 @@ export const EnrollClient: React.FC<EnrollClientProps> = ({
 
     try {
       const enrollmentData: CreateEnrollmentInput = {
+        clientId: selectedClient,
+        programId: selectedPrograms[0],
         startDate: new Date(startDate).toISOString(),
         endDate: endDate ? new Date(endDate).toISOString() : undefined,
         status: selectedStatus
       };
 
-      if (selectedClient) {
-        enrollmentData.clientId = selectedClient;
-      }
-
-      if (selectedPrograms.length > 0) {
-        enrollmentData.programId = selectedPrograms[0];
-      }
-
-      const response = await fetch('http://localhost:5000/api/enrollments', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify(enrollmentData)
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to enroll in program');
-      }
-
+      await enrollmentService.createEnrollment(enrollmentData);
       setSuccess('Successfully enrolled in program');
-      fetchEnrollments(); // Refresh enrollments after successful enrollment
+      
+      if (selectedClient) {
+        fetchClientEnrollments(selectedClient);
+      }
+      
       setTimeout(() => {
         onEnrollmentComplete();
       }, 1500);
@@ -172,6 +152,7 @@ export const EnrollClient: React.FC<EnrollClientProps> = ({
     console.log('Selected client:', clientId);
     setSelectedClient(clientId);
     setShowClientSelect(false);
+    fetchClientEnrollments(clientId);
   };
 
   const filteredClients = clients.filter(client => 

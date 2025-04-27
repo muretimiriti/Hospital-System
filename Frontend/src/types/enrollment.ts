@@ -35,15 +35,18 @@ export interface UpdateEnrollmentInput {
 }
 
 // Extended enrollment type that includes client and program details
-export interface EnrollmentWithDetails extends Enrollment {
-  client: {
-    id: EntityId;
-    firstName: string;
-    lastName: string;
-  };
+export interface EnrollmentWithDetails {
+  id: string;
   program: {
-    id: EntityId;
+    id: string;
     name: string;
     description: string;
+    duration: number;
+    cost: number;
+    startDate: string;
+    endDate: string;
   };
+  status: EnrollmentStatus;
+  startDate: string;
+  endDate?: string;
 } 
